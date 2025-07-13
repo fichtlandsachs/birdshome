@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+
+{% block html_head %}
+
+{% endblock %}
+
+{% block content %}
+    <form action="personas" method="post">
+        <fieldset class="form-field">
+            <legend>
+                Zusammenfassung
+            </legend>
+
+            <p>
+            <p><label for="name_bird">Name: </label>
+                <input id="name_bird" name="name_bird" type="text" style="borderWidth: 0px;" disabled="true"
+                       value={{ name_bird }}></p>
+            <p>
+                <img src="{{ pic_personas }}" height="75" width="75">
+            </p>
+            <p>
+                <label for="last_visit">letzter Besuch</label>
+                <input id="last_visit" type="datetime-local" style="border: 0" disabled="true" value={{ last_visit }}>
+            </p>
+            <p><label for="num_visits_today">Besuche heute: </label>
+                <input id="num_visits_today" type="number" style="border: 0;" disabled="true"
+                       value={{ num_visits_today }}></p>
+            <p><label for="first_visit">Erster Besuch: </label>
+                <input id="first_visit" name="first_visit" type="date" style="border: 0;" disabled="false"
+                       value={{ first_visit }}></p>
+            <p><label for="date_eggs">Datum der Eiablage: </label>
+                <input id="date_eggs" name="date_eggs" type="date" style="border: 0;" disabled="false"
+                       value={{ date_eggs }}></p>
+            <p><label for="date_chick">K&uumlcken geschl&uumlpft am: </label>
+                <input id="date_chick" type="date" name="date_chick" style="border: 0;" disabled="false"
+                       value={{ date_chick }}></p>
+            <p><label for="date_leave">Ausflug am: </label>
+                <input id="date_leave" type="date" width="100%" name="date_leave" style="border: 0;" disabled="false"
+                       value={{ date_leave }}></p>
+        </fieldset>
+        <input type="submit" id="btnChange" style="text-transform:capitalize;" onclick="changeFieldsStatEdit()"
+               value="&auml;ndern">
+        <input type="submit" id="btnSave" style="text-transform:capitalize;" value="Speichern">
+    </form>
+{% endblock %}
+{% block script %}
+
+    function changeFieldsStatEdit(){
+    document.getElementById("name_bird").removeAttribute("disabled");
+    document.getElementById("first_visit").removeAttribute("disabled");
+    document.getElementById("date_eggs").removeAttribute("disabled");
+    document.getElementById("date_chick").removeAttribute("disabled");
+    document.getElementById("date_leave").removeAttribute("disabled");
+    document.getElementById("btnChange").setAttribute("disabled", "disabled");
+    document.getElementById("btnChange").hidden=true;
+    document.getElementById("btnSave").hidden=false;
+    document.getElementById("btnSave").removeAttribute("disabled");
+    document.getElementById("name_bird").style.borderWidth ="2px"
+    document.getElementById("first_visit").style.borderWidth ="2px"
+    document.getElementById("date_eggs").style.borderWidth ="2px"
+    document.getElementById("date_chick").style.borderWidth ="2px"
+    document.getElementById("date_leave").style.borderWidth ="2px"
+    }
+    function changeFieldsStatNoEdit(){
+    document.getElementById("name_bird").setAttribute("disabled", "disabled");
+    document.getElementById("first_visit").setAttribute("disabled", "disabled");
+    document.getElementById("date_eggs").setAttribute("disabled", "disabled");
+    document.getElementById("date_chick").setAttribute("disabled", "disabled");
+    document.getElementById("date_leave").setAttribute("disabled", "disabled");
+    document.getElementById("btnChange").removeAttribute("disabled");
+    document.getElementById("btnSave").setAttribute("disabled", "disabled");
+    document.getElementById("btnChange").hidden=false;
+    document.getElementById("btnSave").hidden=true;
+    document.getElementById("name_bird").style.borderWidth ="0px";
+    document.getElementById("first_visit").style.borderWidth ="0px";
+    document.getElementById("date_eggs").style.borderWidth ="0px";
+    document.getElementById("date_chick").style.borderWidth ="0px";
+    document.getElementById("date_leave").style.borderWidth ="0px";
+    return false;
+    }
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Videodateien{% endblock %}
+
+{% block html_head %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+
+{% block content %}
+    <!-- The grid: four columns -->
+    <div>
+        <table>
+            <thead>
+            <tr>
+                <td><h2>Videodateien</h2></td>
+            </tr>
+            <p>
+            <form id="dateSelector" action="/video_list" method="post">
+                <label for="dateFiles">Aufnahmedatum: </label>
+                <input type="date" id="dateFiles" name="dateFiles" value={{ date_selection }}>
+                <input type="submit" value="Filter">
+            </form>
+
+            </thead>
+            {% for row in videos %}
+                <tr>
+                    <td><a href="{{ row[1] }}" download>{{ row[0] }}</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

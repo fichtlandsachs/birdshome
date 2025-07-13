@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Flugzeiten{% endblock %}
+
+{% block html_head %}
+
+    <style>
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div>
+        <a href={{ report }}>Download</a>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <td>Datum</td>
+            <td>Uhrzeit</td>
+        </tr>
+        </thead>
+
+        {% for row in activities %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+            </tr>
+        {% endfor %}
+
+    </table>
+    <script>
+        document.getElementById('stream').setAttribute("class", "inactive");
+        document.getElementById('cam').setAttribute("class", "inactive");
+        document.getElementById('stats').setAttribute("class", "active");
+        document.getElementById('media').setAttribute("class", "inactive");
+    </script>
+{% endblock %}
+

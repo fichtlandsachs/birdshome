@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    {% block html_head %}{% endblock %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/navigation.css') }}">
+</head>
+<body>
+<div class="topnav" id="birdNav">
+
+    <a href="personas" id="we_live_here">Hier wohnen wir</a>
+
+    <a href="stream" id="stream">Live Stream</a>
+    <a href="capture_picture" id="cam">Foto aufnehmen</a>
+    <a href="capture_video" id="record">Film aufnehmen</a>
+    <div class="dropdown">
+        <button class="dropbtn">Media</button>
+        <div class="dropdown-content" id="media">
+            <a href="slide_show">Bilder</a>
+            <a href="video_list_raw">Video neu</a>
+            <a href="video_list_detect">Video</a>
+            <a href="video_list_no_detect">Videos aussortiert</a>
+            <a href="replay_list">Zeitraffer</a>
+        </div>
+    </div>
+    <a href="admin" id="admin">Admin</a>
+    <a href="javascript:void(0);" class="icon" onclick="navFunction()">
+        <i class="fa fa-bars"></i>
+    </a>
+</div>
+<div id="content">
+    {% block content %}{% endblock %}
+</div>
+
+<div id="footer">
+    {% block footer %}
+        @ by fichtlandsachs.
+    {% endblock %}
+</div>
+<script>
+    function navFunction() {
+        var x = document.getElementById("birdNav");
+        if (x.className === "topnav") {
+            x.className += " responsive";
+        } else {
+            x.className = "navbar";
+        }
+    }
+
+    function takePicture() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState === 4 &amp;&amp; xmlhttp.status === 200) {
+                var response = xmlhttp.responseText; // hier kannst du etwas mit der Rückgabe machen
+            }
+        };
+        xmlhttp.open("GET", "http://127.0.0.1/cam", true);
+        xmlhttp.send();
+    }
+
+    function toggleImageFullscreen(element) {
+      // Falls kein Fullscreen aktiv ist, aktiviere ihn
+      if (!document.fullscreenElement) {
+        element.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+      } else {
+        // Ansonsten verlasse den Fullscreen-Modus
+        document.exitFullscreen();
+      }
+    }
+
+    window.addEventListener("beforeunload", function () {
+        navigator.sendBeacon('/stop_stream');
+    })
+      function toggleImageFullscreen(img) {
+      if (!document.fullscreenElement) {
+        // Versucht, den Vollbildmodus für das Bild zu aktivieren
+        if (img.requestFullscreen) {
+          img.requestFullscreen();
+        } else if (img.mozRequestFullScreen) { /* Firefox */
+          img.mozRequestFullScreen();
+        } else if (img.webkitRequestFullscreen) {
+          img.webkitRequestFullscreen();
+        } else if (img.msRequestFullscreen) { /* IE/Edge */
+          img.msRequestFullscreen();
+        }
+      } else {
+        // Beendet den Vollbildmodus
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
+    }
+    {% block script %}{% endblock %}
+</script>
+</body>

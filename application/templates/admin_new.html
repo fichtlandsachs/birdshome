@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    <div class="form-wrapper">
+        <h2 class="title">Einstellungen</h2>
+
+        <form method="POST" action="{{ url_for('admin') }}">
+            <fieldset class="form-field">
+                <legend>Allgemine Einstellungen</legend>
+                <p>
+                    {{ form.duration_vid.label }}
+                    {{ form.duration_vid(min=1, max=45,onChange="updateFieldDuration(this.value)") }}
+                    {% if form.duration_vid.errors %}
+                        <ul class="errors">
+                            {% for error in form.duration_vid.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {{ form.duration_vidVal }}
+                <p>
+                {{ form.vid_res_x.label }}
+                {{ form.vid_res_x }}
+                {% if form.vid_res_x.errors %}
+                    <ul class="errors">
+                        {% for error in form.vid_res_x.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {{ form.vid_res_y.label }}
+                {{ form.vid_res_y }}
+                {% if form.vid_res_y.errors %}
+                    <ul class="errors">
+                        {% for error in form.vid_res_y.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                {{ form.sensitivity.label }}
+                {{ form.sensitivity(min=1, max=100,onChange="updateFieldSenstivity(this.value)") }}
+                {% if form.sensitivity.errors %}
+                    <ul class="errors">
+                        {% for error in form.sensitivity.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {{ form.sensitivityVal }}
+                <p>
+                    {{ form.grayscale.label }}
+                    {{ form.grayscale }}
+                    {% if form.grayscale.errors %}
+                    <ul class="errors">
+                        {% for error in form.grayscale.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                {{ form.prefix_vid.label }}
+                {{ form.prefix_vid }}
+                {% if form.prefix_vid.errors %}
+                    <ul class="errors">
+                        {% for error in form.prefix_vid.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+            </p>
+                <p>
+                    {{ form.prefix_pic.label }}
+                    {{ form.prefix_pic }}
+                    {% if form.prefix_pic.errors %}
+                        <ul class="errors">
+                            {% for error in form.prefix_pic.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {{ form.pic_ending.label }}
+                {{ form.pic_ending }}
+                {% if form.pic_ending.errors %}
+                    <ul class="errors">
+                        {% for error in form.pic_ending.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </fieldset>
+            <fieldset class="form-field">
+                <legend>Zeitraffer</legend>
+                <p>
+
+                    {{ form.replay_enabled }}
+                    {{ form.replay_enabled.label }}
+                    {% if form.replay_enabled.errors %}
+                        <ul class="errors">
+                            {% for error in form.replay_enabled.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                <p>
+                {{ form.replay_interval.label }}
+                {{ form.replay_interval }}
+                {% if form.replay_interval.errors %}
+                    <ul class="errors">
+                        {% for error in form.replay_interval.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                    {{ form.replay_days.label }}
+                    {{ form.replay_days }}
+                    {% if form.replay_days.errors %}
+                        <ul class="errors">
+                            {% for error in form.replay_days.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                <p>
+
+                {{ form.frames_per_sec_replay.label }}
+                {{ form.frames_per_sec_replay }}
+                {% if form.frames_per_sec_replay.errors %}
+                    <ul class="errors">
+                        {% for error in form.frames_per_sec_replay.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </fieldset>
+            <fieldset class="form-field">
+                <legend>Serverupload</legend>
+                <div class="mb-3">
+                    {{ form.upload_enabled }}
+                    {{ form.upload_enabled.label }}
+                </div>
+                {{ form.hidden_tag() }}
+                {{ form.server_upload_enabled }}
+                <!-- Radio-Buttons zur Auswahl des Dienstes -->
+                <div class="mb-3">
+                  <label class="form-label">Wähle den Dienst:</label><br>
+                  {% for subfield in form.service %}
+                    <label class="form-check-label me-3">
+                      {{ subfield() }} {{ subfield.label.text }}
+                    </label>
+                  {% endfor %}
+                </div>
+                <!-- Eingabefelder für SMB -->
+                <div id="smb_fields">
+                  <h4>SMB Einstellungen</h4>
+                  <div class="mb-3">
+                    {{ form.smb_share.label(class="form-label") }}
+                    {{ form.smb_share(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.smb_host.label(class="form-label") }}
+                    {{ form.smb_host(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.smb_user.label(class="form-label") }}
+                    {{ form.smb_user(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.smb_password.label(class="form-label") }}
+                    {{ form.smb_password(class="form-control") }}
+                  </div>
+                </div>
+
+                <!-- Eingabefelder für Nextcloud -->
+                <div id="nextcloud_fields" style="display:none;">
+                  <h4>Nextcloud Einstellungen</h4>
+                  <div class="mb-3">
+                    {{ form.nextcloud_url.label(class="form-label") }}
+                    {{ form.nextcloud_url(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.nextcloud_share.label(class="form-label") }}
+                    {{ form.nextcloud_share(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.nextcloud_user.label(class="form-label") }}
+                    {{ form.nextcloud_user(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.nextcloud_password.label(class="form-label") }}
+                    {{ form.nextcloud_password(class="form-control") }}
+                  </div>
+                </div>
+
+                <!-- Eingabefelder für FTP -->
+                <div id="ftp_fields" style="display:none;">
+                  <h4>FTP Einstellungen</h4>
+                  <div class="mb-3">
+                    {{ form.ftp_host.label(class="form-label") }}
+                    {{ form.ftp_host(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.ftp_port.label(class="form-label") }}
+                    {{ form.ftp_port(class="form-control") }}
+                  </div>
+                    <div class="mb-3">
+                    {{ form.ftp_share.label(class="form-label") }}
+                    {{ form.ftp_share(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.ftp_user.label(class="form-label") }}
+                    {{ form.ftp_user(class="form-control") }}
+                  </div>
+                  <div class="mb-3">
+                    {{ form.ftp_password.label(class="form-label") }}
+                    {{ form.ftp_password(class="form-control") }}
+                  </div>
+                </div>
+                <p>
+                {{ form.delete_enabled }}
+                {{ form.delete_enabled.label }}
+                {% if form.delete_enabled.errors %}
+                    <ul class="errors">
+                        {% for error in form.delete_enabled.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                {{ form.keep_file_time.label }}
+                {{ form.keep_file_time }}
+                    {% if form.keep_file_time.errors %}
+                        <ul class="errors">
+                            {% for error in form.keep_file_time.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                <p>
+                {{ form.num_retry_upload.label }}
+                {{ form.num_retry_upload }}
+                {% if form.num_retry_upload.errors %}
+                    <ul class="errors">
+                        {% for error in form.num_retry_upload.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                {{ form.pause_retry_upload.label }}
+                {{ form.pause_retry_upload }}
+                {% if form.pause_retry_upload.errors %}
+                    <ul class="errors">
+                        {% for error in form.pause_retry_upload.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                {{ form.time_upload.label }}
+                {{ form.time_upload }}
+                {% if form.time_upload.errors %}
+                    <ul class="errors">
+                        {% for error in form.time_upload.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </fieldset>
+            <fieldset class="form-field">
+                <legend>Videoanalyse</legend>
+                <p>
+                {{ form.vid_sorter_enabled }}
+                {{ form.vid_sorter_enabled.label }}
+                {% if form.vid_sorter_enabled.errors %}
+                    <ul class="errors">
+                        {% for error in form.time_vid_sorter.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>
+                {{ form.time_vid_sorter.label }}
+                {{ form.time_vid_sorter }}
+                {% if form.time_vid_sorter.errors %}
+                    <ul class="errors">
+                        {% for error in form.time_vid_sorter.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.vid_sorter_frame_dist.label }}
+                {{ form.vid_sorter_frame_dist }}
+                <p>
+                {{ form.delete_nodetect_enabled }}
+                {{ form.delete_nodetect_enabled.label }}
+                {% if form.delete_nodetect_enabled.errors %}
+                    <ul class="errors">
+                        {% for error in form.delete_nodetect_enabled.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </fieldset>
+
+
+            {{ form.submit }}
+
+        </form>
+    </div>
+{% endblock %}
+{% block script %}
+    function updateFieldSenstivity(val) {
+        document.getElementById('sensitivityVal').value = parseInt(val);
+    }
+    function updateFieldDuration(val) {
+        document.getElementById('duration_vidVal').value = parseInt(val);
+    }
+
+    function toggleServerUpload() {
+        var toggle = document.getElementById('upload_enabled');
+        var service = document.querySelector('input[name="service"]:checked').value;
+        var services = {
+        'smb': document.getElementById('smb_fields'),
+        'nextcloud': document.getElementById('nextcloud_fields'),
+        'ftp': document.getElementById('ftp_fields')
+        };
+        if (toggle.checked) {
+            for (var key in services) {
+                if (service === key) {
+                    services[key].querySelectorAll('input').forEach(function(input) {
+                        input.setAttribute('required', 'required');
+                    });
+                } else {
+                    services[key].querySelectorAll('input').forEach(function(input) {
+                        input.removeAttribute('required');
+                    });
+                }
+            }
+         } else {
+            for (var key in services) {
+                     services[key].querySelectorAll('input').forEach(function(input) {
+                        input.removeAttribute('required');
+            });
+        }
+    }}
+
+    function toggleFields() {
+        var service = document.querySelector('input[name="service"]:checked').value;
+        var services = {
+            'smb': document.getElementById('smb_fields'),
+            'nextcloud': document.getElementById('nextcloud_fields'),
+            'ftp': document.getElementById('ftp_fields')
+        };
+
+        for (var key in services) {
+            if (service === key) {
+                services[key].style.display = 'block';
+            } else {
+                services[key].style.display = 'none';
+                services[key].querySelectorAll('input').forEach(function(input) {
+                    input.value = '';
+                    input.removeAttribute('required');
+                });
+            }
+        }
+    }
+
+    // Event Listener für die Radio-Buttons
+    document.querySelectorAll('input[name="service"]').forEach(function(radio) {
+        radio.addEventListener('change', toggleFields);
+    });
+
+    // Initialer Aufruf beim Laden der Seite
+    toggleFields();
+    toggleServerUpload();
+{% endblock %}

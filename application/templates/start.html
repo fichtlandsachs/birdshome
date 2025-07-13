@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+
+{% block html_head %}
+
+{% endblock %}
+
+{% block content %}
+    <fieldset>
+        <legend>
+            Zusammenfassung
+        </legend>
+        <p>
+        <p>
+            <img src="{{ pic_personas }}" height="75" width="75">
+        </p>
+        <p>
+            <label for="last_visit">letzter Besuch</label>
+            <input id="last_visit" type="text" style="border: 0" disabled="true" value="{{ last_visit }}"></p>
+        <p><label for="num_visits_today">Besuche heute: </label>
+            <input id="num_visits_today" type="number" style="border: 0;" disabled="true"
+                   value={{ num_visits_today }}></p>
+        <p><label for="overall_visits">Besuche gesamt: </label>
+            <input id="overall_visits" type="number" style="border: 0;" disabled="true" value={{ overall_visits }}>
+        </p>
+        <p><label for="num_movies">Anzahl Filme: </label>
+            <input id="num_movies" type="number" style="border: 0;" disabled="true" value={{ num_movies }}></p>
+        <p><label for="num_pictures">Anzahl Bilder: </label>
+            <input id="num_pictures" type="number" style="border: 0;" disabled="true" value={{ num_pictures }}></p>
+    </fieldset>
+{% endblock %}

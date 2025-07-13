@@ -1,0 +1,105 @@
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.border_box, .adminFormOutputField {
+    border: 10px solid #000;
+    padding: 1em;
+}
+
+label, .flex label {
+    padding: 1ex;
+    cursor: pointer;
+}
+
+th, td {
+    border-bottom: 1px solid #898989;
+    position: relative;
+}
+
+tr:hover {
+    background-color: #b4ff9c;
+}
+
+.stream, .screenShot, .responsive {
+    width: 100%;
+    height: auto;
+}
+
+.container {
+    visibility: visible;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.column {
+    float: left;
+    width: 10%;
+    padding: 10px;
+}
+
+.column img {
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.column img:hover {
+    opacity: 1;
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+img {
+    cursor: pointer;
+    width: auto;
+    height: auto;
+}
+
+.fullscreen {
+    object-fit: contain;
+}
+
+#imgtext {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    color: white;
+    font-size: 10px;
+}
+
+.closebtn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: white;
+    font-size: 35px;
+    cursor: pointer;
+}
+
+@media screen and (max-width: 600px) {
+    .topnav a:not(:first-child), .topnav.responsive a {
+        display: none;
+        float: none;
+        text-align: left;
+    }
+
+    .topnav a.icon, .topnav.responsive .icon {
+        float: right;
+        position: absolute;
+        right: 0;
+        top: 0;
+        display: block;
+    }
+
+    .topnav.responsive {
+        position: relative;
+    }
+}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Aufnahme{% endblock %}
+
+{% block html_head %}
+
+{% endblock %}
+
+{% block content %}
+    <div>
+        <style>
+            .item {
+                float: left;
+                width: 800px;
+                margin: 10px;
+            }
+        </style>
+
+        <img class="screenShot" src="{{ picture }}"/>
+
+    </div>
+    <script>
+        document.getElementById('stream').setAttribute("class", "inactive");
+        document.getElementById('cam').setAttribute("class", "active");
+        document.getElementById('stats').setAttribute("class", "inactive");
+        document.getElementById('media').setAttribute("class", "inactive");
+
+    </script>
+{% endblock %}

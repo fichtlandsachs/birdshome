@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Klimadaten{% endblock %}
+
+{% block html_head %}
+
+    <style>
+
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div>
+        <a href={{ report }}>Download</a>
+    </div>
+    {% if not chart == None %}
+        <!--<img src="{{ chart }}" width="350" height="350">-->
+    {% endif %}
+    <table>
+        <thead>
+        <tr>
+            <td>Datum</td>
+            <td>Uhrzeit</td>
+            <td>Temperatur</td>
+            <td>Luftfeuchte</td>
+            <td>Luftdruck</td>
+            <td>Helligkeit</td>
+            <td>Temperatur Nest</td>
+        </tr>
+        </thead>
+
+        {% for row in climateRec %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[5] }}</td>
+                <td>{{ row[6] }}</td>
+            </tr>
+        {% endfor %}
+
+    </table>
+    <script>
+        document.getElementById('stream').setAttribute("class", "inactive");
+        document.getElementById('cam').setAttribute("class", "inactive");
+    </script>
+{% endblock %}
+
