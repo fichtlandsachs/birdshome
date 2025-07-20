@@ -16,15 +16,15 @@ from application.handler.database_hndl import DBHandler, DatabaseChangeEvent
 
 
 class SecureFileUploader:
-    def __init__(self, db_uri, retries=3, delay=5):
+    def __init__(self, db_uri,session, retries=3, delay=5, log_level=logging.ERROR):
         """
         Initialisiert den Uploader mit der Anzahl der Wiederholungsversuche und der Wartezeit (in Sekunden)
         """
         self.logger = logging.getLogger('SecureFileUploaderLogger')
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(log_level)
         log_file = '/etc/birdshome/application/log/SecureFileUploader.log'
         logger_handler = RotatingFileHandler(filename=log_file, maxBytes=100000, backupCount=10)
-        logger_handler.setLevel(logging.DEBUG)
+        logger_handler.setLevel(log_level)
         # Format für die Log-Meldungen definieren
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         logger_handler.setFormatter(formatter)
@@ -32,7 +32,7 @@ class SecureFileUploader:
         self.logger.addHandler(logger_handler)
         self._retries = retries
         self._delay = delay
-        self._db_handler = DBHandler(db_uri)
+        self._db_handler = DBHandler(db_uri, session)
 
         self._server_not_found = False
         self._server_upload_enabled = 0
@@ -158,12 +158,18 @@ class SecureFileUploader:
 
     def check_network(self):
         try:
-            self.ip_adress = socket.gethostbyname(self._server)
-            self.server_not_found = False
-            return self.ip_adress
+            if self._server != '':
+                self.ip_adress = socket.gethostbyname(self._server)
+                self.server_not_found = False
+                return self.ip_adress
+            else:
+                self.server_not_found = True
+                self.logger.error(f'Server not defined. Configuration Error')
+                return None
         except Exception:
             self.server_not_found = True
             self.logger.error(f'Can not find server {self._server}')
+            return None
 
     def upload_samba(self, retries, delay, server_name, username, password, share_name, folder, local_files,
                      delete_local=False):

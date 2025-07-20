@@ -19,7 +19,7 @@ class BirdVideoAnalyzer:
     Falls in einem Video kein Vogel gefunden wird, wird die Datei in ein anderes Verzeichnis verschoben.
     """
 
-    def __init__(self, _db_uri, model_path="yolov8n.pt", frame_interval=30, resize_factor=0.5):
+    def __init__(self, _db_uri, session, model_path="yolov8n.pt", frame_interval=30, resize_factor=0.5):
         """
 
         :param model_path: der Pfad oder Name des vortrainierten YOLO‑Modells (Standard: YOLOv8n).
@@ -37,7 +37,7 @@ class BirdVideoAnalyzer:
         logger_handler.setFormatter(formatter)
         # Handler dem Logger hinzufügen
         self._logger.addHandler(logger_handler)
-        self._db_handler = DBHandler(_db_uri)
+        self._db_handler = DBHandler(_db_uri, session)
         self._output_dir_no_detect = ''
         self._input_dir = None
         self._output_dir_detect = self._db_handler.get_config_entry(constants.VIDEO, constants.FOLDER_VIDEOS_DETECT)

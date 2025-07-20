@@ -31,7 +31,7 @@ class Config:
     NEXT_CLOUD_PASSWORD = ''
     NEXT_CLOUD_FOLDER = ''
 
-    SMB_ENABLED = 1
+    SMB_ENABLED = 0
     SMB_SERVER = ''
     SMB_USER = ''
     SMB_PASSWORD = ''
@@ -86,14 +86,14 @@ class Config:
     SQLALCHEMY_DATABASE_URI = '/database/birdshome.db'
 
     OUTPUT_FOLDER = os.path.join('static')
-    MEDIA_FOLDER = 'static/media'
+    FOLDER_MEDIA = 'static/media'
     DATABASE_FOLDER = 'database'
     DATABASE_NAME = 'birdshome.db'
     FOLDER_PICTURES = 'photos'
     FOLDER_VIDEOS = 'videos'
     FOLDER_SCREENSHOTS = 'pictures'
-    FOLDER_VIDEO_NO_DETECT = 'nodetect'
-    FOLDER_VIDEO_DETECT = 'detect'
+    FOLDER_VIDEOS_NO_DETECT = 'nodetect'
+    FOLDER_VIDEOS_DETECT = 'detect'
     FOLDER_PERSONAS = 'general'
 
     TIME_FORMAT_FILE = "%d%m%Y%H%M%S"

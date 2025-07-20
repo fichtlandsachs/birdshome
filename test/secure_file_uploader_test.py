@@ -17,32 +17,28 @@ sys.modules['grp'] = Mock()
 sys.modules['pwd'] = Mock()
 
 from application.handler.SecureFileUploader import SecureFileUploader
-from application import create_app, db
+from application import create_app, db, constants
 
 class TestSecureFileUploader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        os.putenv('APPLICATION_MODE', 'Test')
         """Einmalige Initialisierung vor allen Tests"""
-        #pass
+        pass
 
     def setUp(self):
         """Test-Setup vor jedem Testfall"""
         self.app = create_app()
         self.app.config.update({
-            'TESTING': True,
-            'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
             'WTF_CSRF_ENABLED': False
         })
         self.client = self.app.test_client()
         self.app_context = self.app.app_context()
         self.app_context.push()
 
-        # Create all database tables
-        db.create_all()
         with patch('paramiko.Transport'), \
              patch('paramiko.SFTPClient'):
-            self.uploader = SecureFileUploader(self.test_db_uri)
+            with self.app.app_context():
+                 self.uploader = SecureFileUploader(self.app.config[constants.SQLALCHEMY_DATABASE_URI], self.app.config[constants.DB_SESSION])
         self.test_dir = tempfile.mkdtemp()
 
     def tearDown(self):

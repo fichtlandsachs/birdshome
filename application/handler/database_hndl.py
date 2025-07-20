@@ -31,16 +31,20 @@ class DatabaseEventHandler:
 
 
 class DBHandler:
-    def __init__(self, db_url):
-
-        engine = create_engine(db_url)
-        self.conn = engine.connect()
-        session = sessionmaker(bind=engine)
-        self.session = session()
+    def __init__(self, db_url, curr_session):
+        if curr_session is None:
+            engine = create_engine(db_url)
+            self.conn = engine.connect()
+            session = sessionmaker(bind=engine)
+            self.session = session()
+        else:
+            self.session = curr_session
+            self.conn = None
 
     def close(self):
         self.session.close()
-        self.conn.close()
+        if self.conn is not None:
+            self.conn.close()
 
     def get_config_entry(self, app_area, config_key):
         if self.check_config_entry_exists(app_area, config_key):

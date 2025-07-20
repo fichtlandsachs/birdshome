@@ -29,7 +29,7 @@ class StreamingOutput(io.BufferedIOBase):
 
 
 class VideoSocket:
-    def __init__(self, db_uri):
+    def __init__(self, db_uri, session):
         self.video_format = None
         self.db_uri = db_uri
         self.logger = logging.getLogger('VideoSocket')
@@ -43,7 +43,7 @@ class VideoSocket:
         # Handler dem Logger hinzufügen
         self.logger.addHandler(logger_handler)
         self.lsize = (640, 480)
-        self.db_handler = DBHandler(self.db_uri)
+        self.db_handler = DBHandler(self.db_uri, session)
         self.grayscale_enabled = 0
         self.cam_available = False
         try:
@@ -73,13 +73,12 @@ class VideoSocket:
         self.get_configuration()
 
     def get_configuration(self):
-        db_handler = DBHandler(self.db_uri)
-        self.video_duration = int(db_handler.get_config_entry(constants.VIDEO, constants.DURATION_VID))
-        self.time_format = db_handler.get_config_entry(constants.SYSTEM, constants.TIME_FORMAT_FILE)
-        self.video_format = db_handler.get_config_entry(constants.VIDEO, constants.VID_FORMAT)
-        self.output_folder = db_handler.get_config_entry(constants.VIDEO, constants.FOLDER_VIDEOS)
-        self.sensitivity = int(db_handler.get_config_entry(constants.SYSTEM, constants.SENSITIVITY))
-        self.duration = int(db_handler.get_config_entry(constants.VIDEO, constants.DURATION_VID))
+        self.video_duration = int(self.db_handler.get_config_entry(constants.VIDEO, constants.DURATION_VID))
+        self.time_format = self.db_handler.get_config_entry(constants.SYSTEM, constants.TIME_FORMAT_FILE)
+        self.video_format = self.db_handler.get_config_entry(constants.VIDEO, constants.VID_FORMAT)
+        self.output_folder = self.db_handler.get_config_entry(constants.VIDEO, constants.FOLDER_VIDEOS)
+        self.sensitivity = int(self.db_handler.get_config_entry(constants.SYSTEM, constants.SENSITIVITY))
+        self.duration = int(self.db_handler.get_config_entry(constants.VIDEO, constants.DURATION_VID))
         self.grayscale_enabled = int(self.db_handler.get_config_entry(constants.SYSTEM, constants.GRAYSCALE_ENABLED))
         if self.cam_available:
             if self.grayscale_enabled == 1:
@@ -90,7 +89,6 @@ class VideoSocket:
                 self.logger.info(f"remove grayscale enabled")
         else:
             self.logger.warning("camera not available")
-        db_handler.close()
 
     def client_handler(self, client_socket, addr):
         """Sendet kontinuierlich den aktuell erfassten Frame an den verbundenen Client."""

@@ -13,7 +13,7 @@ from application.handler.database_hndl import DBHandler, DatabaseChangeEvent
 
 
 class ScreenShotHandler:
-    def __init__(self, db_uri):
+    def __init__(self, db_uri, session):
 
         self._last_run_screen_shot = None
         self._folder_screen_shots = None
@@ -26,7 +26,7 @@ class ScreenShotHandler:
         self._daysReplay = None
         self._last_run_replay = None
         self._db_path = db_uri
-        self._dbHandler = DBHandler(db_uri)
+        self._dbHandler = DBHandler(db_uri, session)
         self._update_config()
 
     def _update_config(self):

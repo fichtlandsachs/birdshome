@@ -10,6 +10,7 @@ import flask
 import numpy as np
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import sessionmaker
 
 import constants
 from config import Config as cfg, DevConfig, ProdConfig, TestConfig
@@ -127,16 +128,16 @@ def create_folder_structure(app):
     user_uuid = getpwnam(cfg.USER_APP)[2]
     grp_uuid = getgrnam(cfg.USER_GROUP)[2]
 
-    path_media = os.path.join(app.root_path, cfg.MEDIA_FOLDER)
+    path_media = os.path.join(app.root_path, cfg.FOLDER_MEDIA)
     path_database = os.path.join(app.root_path, cfg.DATABASE_FOLDER)
     database_name = os.path.join(app.root_path, cfg.DATABASE_FOLDER, cfg.DATABASE_NAME)
-    path_video = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_VIDEOS)
-    path_video_detect = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEO_DETECT)
-    path_video_no_detect = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEO_NO_DETECT)
-    path_pictures = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_PICTURES)
-    path_replay = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_REPLAY)
+    path_video = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_VIDEOS)
+    path_video_detect = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEOS_DETECT)
+    path_video_no_detect = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEOS_NO_DETECT)
+    path_pictures = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_PICTURES)
+    path_replay = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_REPLAY)
     path_replay_screens = os.path.join(str(path_replay), str(cfg.FOLDER_REPLAY_SCREENSHOT))
-    path_general = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_PERSONAS)
+    path_general = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_PERSONAS)
 
     app.config[constants.FOLDER_MEDIA] = path_media
     app.config[constants.FOLDER_VIDEOS] = path_video
@@ -146,7 +147,7 @@ def create_folder_structure(app):
     app.config[constants.FOLDER_REPLAY] = path_replay
     app.config[constants.FOLDER_REPLAY_SCREENSHOT] = path_replay_screens
     app.config[constants.FOLDER_PERSONAS] = path_general
-    app.config[constants.SQLALCHEMY_DATABASE_URI] = 'sqlite:///' + str(database_name)
+    #app.config[constants.SQLALCHEMY_DATABASE_URI] = 'sqlite:///' + str(database_name)
 
     if not os.path.exists(path_media):
         os.makedirs(path_media)
@@ -210,6 +211,10 @@ def create_database(app) -> Flask:
         from . import routes
         engine = db.create_engine(url=app.config[constants.SQLALCHEMY_DATABASE_URI])
         db.metadata.create_all(bind=engine, checkfirst=True)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        db.session.commit()
+        app.config['DB_SESSION'] = session
         app = update_configuration(app)
     return app
 
@@ -223,7 +228,7 @@ def create_application_setup(_app: Flask) -> None:
 def update_configuration(_app):
     from application.handler.database_hndl import DBHandler
     update_setup(_app)
-    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI])
+    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI], _app.config[constants.DB_SESSION])
     for entry in appConfigKeys:
         _app.config[entry[1]] = _db.get_config_entry(entry[0], entry[1])
     return _app
@@ -231,19 +236,12 @@ def update_configuration(_app):
 
 def update_setup(_app):
     from application.handler.database_hndl import DBHandler
-    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI])
+    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI], _app.config[constants.DB_SESSION])
     for entry in appConfigKeys:
         if not _db.check_config_entry_exists(entry[0], entry[1]):
             _db.create_update_config_entry(entry[0], entry[1], _app.config[entry[1]])
         else:
             _app.config[entry[1]] = _db.get_config_entry(entry[0], entry[1])
-
-
-def write_setup(_app):
-    from application.handler.database_hndl import DBHandler
-    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI])
-    for entry in appConfigKeys:
-        _db.create_update_config_entry(entry[0], entry[1], _app.config[entry[1]])
 
 
 def recvall(sock, count):

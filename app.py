@@ -13,16 +13,11 @@ from flask import render_template, Response, g, request, redirect, url_for
 
 import application as appl
 import constants
-from application import create_app, write_setup
+from application import create_app, update_setup
 from application.forms.admin_form import AdminForm
 from application.handler.database_hndl import DBHandler, DatabaseEventHandler, DatabaseChangeEvent
 from application.handler.video_socket_2 import VideoSocket
 
-#try:
-    #from uwsgidecorators import *
-    #import uwsgi
-#except:
-    #raise
 import cv2
 
 app = create_app()
@@ -45,28 +40,33 @@ def get_db():
         _db = g._database = sqlite3.connect(DATABASE)
     return _db
 
-
-app.logger.info('Start Video_socket')
-video_socket = VideoSocket(app.config[constants.SQLALCHEMY_DATABASE_URI])
-app.config[constants.EVENT_HANDLERS].register_listener(video_socket)
-thread_video = threading.Thread(target=video_socket.start_socket())
-thread_video.start()
+with app.app_context():
+    app.logger.info('Start Video_socket')
+    video_socket = VideoSocket(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    app.config[constants.EVENT_HANDLERS].register_listener(video_socket)
+    thread_video = threading.Thread(target=video_socket.start_socket())
+    thread_video.start()
 
 time.sleep(5)
-app.logger.info('Start ReplayTask')
-replay_socket = ScreenShotHandler(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI])
-app.config[constants.EVENT_HANDLERS].register_listener(replay_socket)
-replay_socket.start_replay_server()
-app.logger.info('Start FileUploader')
-file_socket = SecureFileUploader(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI])
-app.config[constants.EVENT_HANDLERS].register_listener(file_socket)
-file_socket.start_upload_server()
-app.logger.info('Start BirdsAnalyser')
-bird_analyser_socket = BirdVideoAnalyzer(_db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI])
-app.config[constants.EVENT_HANDLERS].register_listener(bird_analyser_socket)
-bird_analyser_socket.start_analyse_server()
+with app.app_context():
+    app.logger.info('Start ReplayTask')
+    replay_socket = ScreenShotHandler(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    app.config[constants.EVENT_HANDLERS].register_listener(replay_socket)
+    replay_socket.start_replay_server()
 
-db = DBHandler(app.config[constants.SQLALCHEMY_DATABASE_URI])
+with app.app_context():
+    app.logger.info('Start FileUploader')
+    file_socket = SecureFileUploader(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    app.config[constants.EVENT_HANDLERS].register_listener(file_socket)
+    file_socket.start_upload_server()
+
+with app.app_context():
+    app.logger.info('Start BirdsAnalyser')
+    bird_analyser_socket = BirdVideoAnalyzer(_db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    app.config[constants.EVENT_HANDLERS].register_listener(bird_analyser_socket)
+    bird_analyser_socket.start_analyse_server()
+
+db = DBHandler(app.config[constants.SQLALCHEMY_DATABASE_URI], app.config[constants.DB_SESSION])
 if db.check_config_entry_exists(constants.SYSTEM, constants.KEY) and db.get_config_entry(constants.SYSTEM,
                                                                                          constants.KEY) != '':
     key = db.get_config_entry(constants.SYSTEM, constants.KEY)
@@ -83,7 +83,7 @@ cipher = Fernet(key)
 @app.route('/personas', methods=['GET', 'POST'])
 def personas():
     global first_visit, date_leave, date_chick, name_bird, date_eggs
-    _db = DBHandler(app.config[constants.SQLALCHEMY_DATABASE_URI])
+    _db = DBHandler(app.config[constants.SQLALCHEMY_DATABASE_URI], app.config[constants.DB_SESSION])
     if request.method == 'GET':
         name_bird = app.config[constants.NAME_BIRD]
         first_visit = app.config[constants.FIRST_VISIT]
@@ -169,7 +169,7 @@ def slide_show():
     pictures = []
 
     pic_path = app.config[constants.FOLDER_PICTURES]
-    pictures_list = list(pathlib.Path(str(pic_path)).glob('*' + str(app.config[constants.ENDING_PIC])), key=os.path.getmtime)
+    pictures_list = pathlib.Path(str(pic_path)).glob('*' + str(app.config[constants.ENDING_PIC]))
     for pic in pictures_list:
         pict = [pic.name, str(pic.relative_to(app.root_path))]
         pictures.append(pict)
@@ -238,7 +238,7 @@ def video_list_raw():
     vid_path = app.config[constants.FOLDER_VIDEOS]
 
     pattern = '*' + app.config[constants.VID_FORMAT]
-    vid_list.extend(list(pathlib.Path(str(vid_path)).glob(pattern), key=os.path.getmtime, reverse=True))
+    vid_list = pathlib.Path(str(vid_path)).glob(pattern)
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -260,7 +260,7 @@ def video_list_detect():
     vid_path = app.config[constants.FOLDER_VIDEOS_DETECT]
 
     pattern = '*' + app.config[constants.VID_FORMAT]
-    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True))
+    vid_list = pathlib.Path(vid_path).glob(pattern)
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -281,7 +281,7 @@ def replay_list():
 
     vid_path = app.config[constants.FOLDER_REPLAY]
     pattern = app.config[constants.VID_FORMAT]
-    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True))
+    vid_list= pathlib.Path(vid_path).glob(pattern)
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -295,6 +295,7 @@ def video_list_no_detect():
     videos = []
     vid_list = []
     vid_path = app.config[constants.FOLDER_VIDEOS_NO_DETECT]
+    sel_datum = None
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
         sel_datum = datetime.datetime.strptime(form_datum, constants.DATEFORMATE_FILE_SEL)
@@ -302,7 +303,8 @@ def video_list_no_detect():
         sel_datum = datetime.datetime.today()
 
     pattern = '*' + app.config[constants.VID_FORMAT]
-    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime))
+
+    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern)))
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -319,13 +321,6 @@ def _clean_folder(folder, pattern):
                     os.unlink(file_object_path)
     else:
         os.makedirs(folder)
-
-
-@app.teardown_appcontext
-def close_connection():
-    _db = getattr(g, '_database', None)
-    if _db is not None:
-        _db.close()
 
 
 @app.route('/admin', methods=['GET', 'POST'])
@@ -414,7 +409,7 @@ def admin():
                     continue
         if not app.config[constants.REPLAY_ENABLED]:
             clear_path_screen_shots()
-        write_setup(_app=app)
+        update_setup(_app=app)
         app.config[constants.EVENT_HANDLERS].notify_listener(DatabaseChangeEvent)
 
     if app.config[constants.DURATION_VID] is None:
