@@ -87,7 +87,7 @@ class SecureFileUploader:
     def check_network(self):
         try:
             self.ip_adress = socket.gethostbyname(self.server)
-        except Exception as e:
+        except Exception:
             self.server_not_found = True
 
     def upload_samba(self, server_name, username, password, share_name, folder, local_files):
@@ -289,7 +289,7 @@ class SecureFileUploader:
             if rel_path == ".":
                 remote_path = remote_dir
             else:
-                remote_path = os.path.join(remote_dir, rel_path).replace("\\", "/")
+                remote_path = os.path.join(str(remote_dir), str(rel_path)).replace("\\", "/")
             if not ensure_remote_dir(remote_path):
                 print(f"Fehler beim Erstellen des Remote-Verzeichnisses {remote_path}.")
                 continue
@@ -332,11 +332,11 @@ class SecureFileUploader:
         """
         for root, dirs, files in os.walk(local_dir):
             rel_path = os.path.relpath(root, local_dir)
-            dest_root = os.path.join(destination_dir, rel_path)
+            dest_root = os.path.join(str(destination_dir), str(rel_path))
             os.makedirs(dest_root, exist_ok=True)
             for file in files:
                 src_file = os.path.join(root, file)
-                dest_file = os.path.join(dest_root, file)
+                dest_file = os.path.join(str(dest_root), str(file))
                 if self.upload_local(src_file, dest_file):
                     print(f"{src_file} erfolgreich kopiert nach {dest_file}.")
                 else:

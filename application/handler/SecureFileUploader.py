@@ -32,7 +32,7 @@ class SecureFileUploader:
         self.logger.addHandler(logger_handler)
         self._retries = retries
         self._delay = delay
-        self._dbHandler = DBHandler(db_uri)
+        self._db_handler = DBHandler(db_uri)
 
         self._server_not_found = False
         self._server_upload_enabled = 0
@@ -57,49 +57,49 @@ class SecureFileUploader:
 
     def _update_config(self):
         self._server_upload_enabled = int(
-            self._dbHandler.get_config_entry(constants.SMB, constants.SERVER_UPLOAD_ENABLED))
-        self._smb_enabled = int(self._dbHandler.get_config_entry(constants.SMB, constants.SMB_ENABLED))
+            self._db_handler.get_config_entry(constants.SMB, constants.SERVER_UPLOAD_ENABLED))
+        self._smb_enabled = int(self._db_handler.get_config_entry(constants.SMB, constants.SMB_ENABLED))
         self._next_cloud_enabled = int(
-            self._dbHandler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_ENABLED))
-        self._ftp_enabled = int(self._dbHandler.get_config_entry(constants.FTP, constants.FTP_ENABLED))
+            self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_ENABLED))
+        self._ftp_enabled = int(self._db_handler.get_config_entry(constants.FTP, constants.FTP_ENABLED))
         if self._server_upload_enabled == 1:
             if self._ftp_enabled == 1:
                 self._smb_enabled = 0
                 self._nextcloud_enabled = 0
-                self._server = self._dbHandler.get_config_entry(constants.FTP, constants.FTP_SERVER)
-                self._user_upload = self._dbHandler.get_config_entry(constants.FTP, constants.FTP_USER)
-                self._user_password = self._dbHandler.get_config_entry(constants.FTP, constants.FTP_PASSWORD)
-                self._port = int(self._dbHandler.get_config_entry(constants.FTP, constants.FTP_PORT))
-                self._share = self._dbHandler.get_config_entry(constants.FTP, constants.FTP_SHARE)
+                self._server = self._db_handler.get_config_entry(constants.FTP, constants.FTP_SERVER)
+                self._user_upload = self._db_handler.get_config_entry(constants.FTP, constants.FTP_USER)
+                self._user_password = self._db_handler.get_config_entry(constants.FTP, constants.FTP_PASSWORD)
+                self._port = int(self._db_handler.get_config_entry(constants.FTP, constants.FTP_PORT))
+                self._share = self._db_handler.get_config_entry(constants.FTP, constants.FTP_SHARE)
             if self._smb_enabled == 1:
                 self._ftp_enabled = 0
                 self._nextcloud_enabled = 0
-                self._server = self._dbHandler.get_config_entry(constants.SMB, constants.SMB_SERVER)
-                self._user_upload = self._dbHandler.get_config_entry(constants.SMB, constants.SMB_USER)
-                self._user_password = self._dbHandler.get_config_entry(constants.SMB, constants.SMB_PASSWORD)
-                self._share = self._dbHandler.get_config_entry(constants.SMB, constants.SMB_SHARE)
+                self._server = self._db_handler.get_config_entry(constants.SMB, constants.SMB_SERVER)
+                self._user_upload = self._db_handler.get_config_entry(constants.SMB, constants.SMB_USER)
+                self._user_password = self._db_handler.get_config_entry(constants.SMB, constants.SMB_PASSWORD)
+                self._share = self._db_handler.get_config_entry(constants.SMB, constants.SMB_SHARE)
             if self._next_cloud_enabled == 1:
                 self._ftp_enabled = 0
                 self._smb_enabled = 0
-                self._server = self._dbHandler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_SERVER)
-                self._user_upload = self._dbHandler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_USER)
-                self._user_password = self._dbHandler.get_config_entry(constants.NEXT_CLOUD,
-                                                                       constants.NEXT_CLOUD_PASSWORD)
-                self._share = self._dbHandler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_FOLDER)
+                self._server = self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_SERVER)
+                self._user_upload = self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_USER)
+                self._user_password = self._db_handler.get_config_entry(constants.NEXT_CLOUD,
+                                                                        constants.NEXT_CLOUD_PASSWORD)
+                self._share = self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_FOLDER)
 
-        self._time_upload = self._dbHandler.get_config_entry(constants.SMB, constants.TIME_UPLOAD)
-        self._keep_file_time = self._dbHandler.get_config_entry(constants.SMB, constants.KEEP_FILE_LOCAL)
-        self._key = self._dbHandler.get_config_entry(constants.SYSTEM, constants.KEY)
-        self._delete_after_upload = self._dbHandler.get_config_entry(constants.SMB,
-                                                                     constants.DELETE_AFTER_UPLOAD_ENABLED)
+        self._time_upload = self._db_handler.get_config_entry(constants.SMB, constants.TIME_UPLOAD)
+        self._keep_file_time = self._db_handler.get_config_entry(constants.SMB, constants.KEEP_FILE_LOCAL)
+        self._key = self._db_handler.get_config_entry(constants.SYSTEM, constants.KEY)
+        self._delete_after_upload = self._db_handler.get_config_entry(constants.SMB,
+                                                                      constants.DELETE_AFTER_UPLOAD_ENABLED)
         if self._delete_after_upload is None:
             self._delete_after_upload = 0
         else:
             self._delete_after_upload = int(self._delete_after_upload)
-        self._video_format = self._dbHandler.get_config_entry(constants.VIDEO, constants.VID_FORMAT)
-        self._video_folder = self._dbHandler.get_config_entry(constants.VIDEO, constants.FOLDER_VIDEOS)
-        self._replay_folder = self._dbHandler.get_config_entry(constants.REPLAY, constants.FOLDER_REPLAY)
-        self._picture_folder = self._dbHandler.get_config_entry(constants.SYSTEM, constants.FOLDER_PICTURES)
+        self._video_format = self._db_handler.get_config_entry(constants.VIDEO, constants.VID_FORMAT)
+        self._video_folder = self._db_handler.get_config_entry(constants.VIDEO, constants.FOLDER_VIDEOS)
+        self._replay_folder = self._db_handler.get_config_entry(constants.REPLAY, constants.FOLDER_REPLAY)
+        self._picture_folder = self._db_handler.get_config_entry(constants.SYSTEM, constants.FOLDER_PICTURES)
 
     def upload(self):
         while True:
@@ -111,7 +111,7 @@ class SecureFileUploader:
                 if time_now.hour >= int(time_upload[0]) or time_now.hour < 3:
                     self.logger.info('Start uploading files')
                     self.upload_folder(self._picture_folder)
-                    self.upload_folder(self._video_folder)
+                    self.upload_folder(str(self._video_folder))
                     self.upload_folder(self._replay_folder)
             sleep(self._delay * 60)
 
@@ -131,7 +131,7 @@ class SecureFileUploader:
         if self._key == '':
             self.logger.info('Cancel uploading files due to missing key')
         if self._smb_enabled == 1:
-            self.logger.info(f'Using smb for upload')
+            self.logger.info("Using smb for upload")
             smb_passw = Fernet(self._key).decrypt(self._user_password).decode()
             self.upload_samba(retries=self._retries, delay=self._delay, server_name=self._server,
                               username=self._user_upload,
@@ -141,7 +141,7 @@ class SecureFileUploader:
                               local_files=folder_local,
                               delete_local=delete_local)
         elif self._next_cloud_enabled == 1:
-            self.logger.info(f'Using nextcloud for upload')
+            self.logger.info("Using nextcloud for upload")
             nextcloud_passw = Fernet(self._key).decrypt(self._user_password).decode()
             self.upload_nextcloud(retries=self._retries, delay=self._delay, base_url=self._server,
                                   username=self._user_upload,
@@ -149,9 +149,9 @@ class SecureFileUploader:
                                   remote_path=os.path.join(self._share, folder_remote),
                                   local_files=folder_local)
         elif self._ftp_enabled == 1:
-            self.logger.info(f'Using ftp for upload')
+            self.logger.info("Using ftp for upload")
             sftp_password = Fernet(self._key).decrypt(self._user_password).decode()
-            self.upload_directory_sftp(retries=self._retries, delay=self._delay, host=self._server, port=self._port,
+            self.upload_directory_sftp(  host=self._server, port=self._port,
                                        username=self._user_upload,
                                        password=sftp_password, local_folder=folder_local,
                                        remote_path=os.path.join(self._share, folder_remote))
@@ -161,7 +161,7 @@ class SecureFileUploader:
             self.ip_adress = socket.gethostbyname(self._server)
             self.server_not_found = False
             return self.ip_adress
-        except Exception as e:
+        except Exception:
             self.server_not_found = True
             self.logger.error(f'Can not find server {self._server}')
 
@@ -242,7 +242,7 @@ class SecureFileUploader:
                 sleep(delay)
         return False
 
-    def upload_directory_sftp(self, retries, delay, host, port, username, password, local_folder, remote_path):
+    def upload_directory_sftp(self, host, port, username, password, local_folder, remote_path):
         """
         Kopiert rekursiv das Verzeichnis local_dir (inkl. Unterverzeichnisse) per SFTP auf den Server.
         Dabei wird vor dem Upload jedes Verzeichnisses geprüft, ob es auf der Remote-Seite existiert;
@@ -257,7 +257,7 @@ class SecureFileUploader:
             transport = paramiko.Transport((host, port))
             transport.connect(username=username, password=password)
             sftp = paramiko.SFTPClient.from_transport(transport)
-            home_folder = sftp.normalize('.')
+
             # Sicherstellen, dass der Uploadpfadeinstieg auch verfügbar ist
             paths = str(remote_path).split('/')
             for remote_folder in paths:
@@ -271,7 +271,7 @@ class SecureFileUploader:
                 delete_local = False
             else:
                 delete_local = True
-            self.upload_files(_sftp=sftp, folder_local=local_folder, folder_remote=remote_folder,
+            self.upload_files(folder_local=local_folder, folder_remote=remote_folder,
                               delete_local=delete_local)
 
 
@@ -284,32 +284,11 @@ class SecureFileUploader:
         transport.close()
         return True
 
-    def upload_files(self, _sftp, folder_local, folder_remote, delete_local=False):
-        curr_folder = _sftp.normalize('.')
-        _sftp.chdir(curr_folder)
-        with os.scandir(folder_local) as entries:
-            for entry in entries:
-                if entry.is_dir():
-                    try:
-                        _sftp.chdir(entry.name)
-                    except Exception as e:
-                        _sftp.mkdir(entry.name)
-                        _sftp.chdir(entry.name)
-                    folder_remote_lcl = os.path.join(folder_remote, entry.name)
-                    folder_local_lcl = os.path.join(folder_local, entry.name)
-                    self.upload_files(_sftp=_sftp, folder_local=folder_local_lcl, folder_remote=folder_remote_lcl,
-                                      delete_local=delete_local)
-                    _sftp.chdir(curr_folder)
-                if entry.is_file():
-                    self.upload_file(_sftp=_sftp, file_name=entry.name, local_path=folder_local,
-                                     delete_local=delete_local)
-
-    def upload_file(self, _sftp, file_name, local_path, delete_local=False):
+    def upload_file(self, _sftp, file_name, local_path):
         global local_file
-        curr_folder = _sftp.normalize('.')
         try:
 
-            local_file = str(os.path.join(os.path.join(local_path, file_name)))
+            local_file = str(os.path.join(os.path.join(str(local_path), str(file_name))))
             # Resume-Logik
             try:
                 remote_size = _sftp.stat(file_name).st_size
@@ -320,7 +299,7 @@ class SecureFileUploader:
                 self.logger.info(f"{local_file} bereits vollständig hochgeladen.")
                 return
             with open(local_file, 'rb') as f:
-                time_file = os.path.getctime(f)
+                time_file = os.path.getctime(f.name)
                 createion_date = datetime.fromtimestamp(time_file)
                 if remote_size:
                     f.seek(remote_size)

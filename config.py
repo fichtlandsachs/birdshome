@@ -103,11 +103,21 @@ class Config:
 class ProdConfig(Config):
     DEBUG = False
     TESTING = False
+    FLASK_DEBUG = 0
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = 'sqlite:////etc/birdshome/application/database/birdshome.db'
+
+class TestConfig(Config):
+    DEBUG = False
+    TESTING = False
+    FLASK_DEBUG = 1
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 
 class DevConfig(Config):
     DEBUG = True
     TESTING = True
     FLASK_DEBUG = 1
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:////etc/birdshome/application/database/birdshome_dev.db'

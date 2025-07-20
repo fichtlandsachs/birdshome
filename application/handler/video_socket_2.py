@@ -131,7 +131,7 @@ class VideoSocket:
         return full_file_name
 
     def motion_handling(self):
-        global cur
+        cur = None
         prev = None
         encoding = False
         ltime = 0
@@ -153,8 +153,8 @@ class VideoSocket:
             prev = cur
             time.sleep(0.33)
 
-    def create_video(self, full_FileName, recording_lock=None):
-        output = FfmpegOutput(output_filename=f"{full_FileName}",
+    def create_video(self, full_file_name):
+        output = FfmpegOutput(output_filename=f"{full_file_name}",
                               audio_bitrate=44100,
                               audio_codec='aac',
                               audio=True,

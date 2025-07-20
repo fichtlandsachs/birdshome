@@ -31,9 +31,9 @@ class DatabaseEventHandler:
 
 
 class DBHandler:
-    def __init__(self, dbUrl):
+    def __init__(self, db_url):
 
-        engine = create_engine(dbUrl)
+        engine = create_engine(db_url)
         self.conn = engine.connect()
         session = sessionmaker(bind=engine)
         self.session = session()

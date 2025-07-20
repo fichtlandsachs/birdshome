@@ -12,7 +12,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 import constants
-from config import Config as CFG, DevConfig, ProdConfig
+from config import Config as cfg, DevConfig, ProdConfig, TestConfig
+
 
 
 class SocketReader:
@@ -116,24 +117,26 @@ def get_configuration_data(app: flask.app):
     mode = os.getenv('APPLICATION_MODE')
     if mode == 'DEV':
         app.config.from_object(DevConfig())
+    elif mode == 'TEST':
+        app.config.from_object(TestConfig())
     else:
         app.config.from_object(ProdConfig())
-    # updateConfiguration(app)
+
 
 def create_folder_structure(app):
-    user_uuid = getpwnam(CFG.USER_APP)[2]
-    grp_uuid = getgrnam(CFG.USER_GROUP)[2]
+    user_uuid = getpwnam(cfg.USER_APP)[2]
+    grp_uuid = getgrnam(cfg.USER_GROUP)[2]
 
-    path_media = os.path.join(app.root_path, CFG.MEDIA_FOLDER)
-    path_database = os.path.join(app.root_path, CFG.DATABASE_FOLDER)
-    database_name = os.path.join(app.root_path, CFG.DATABASE_FOLDER, CFG.DATABASE_NAME)
-    path_video = os.path.join(app.root_path, CFG.MEDIA_FOLDER, CFG.FOLDER_VIDEOS)
-    path_video_detect = os.path.join(app.root_path, CFG.MEDIA_FOLDER, CFG.FOLDER_VIDEOS, CFG.FOLDER_VIDEO_DETECT)
-    path_video_no_detect = os.path.join(app.root_path, CFG.MEDIA_FOLDER, CFG.FOLDER_VIDEOS, CFG.FOLDER_VIDEO_NO_DETECT)
-    path_pictures = os.path.join(app.root_path, CFG.MEDIA_FOLDER, CFG.FOLDER_PICTURES)
-    path_replay = os.path.join(app.root_path, CFG.MEDIA_FOLDER, CFG.FOLDER_REPLAY)
-    path_replay_screens = os.path.join(path_replay, CFG.FOLDER_REPLAY_SCREENSHOT)
-    path_general = os.path.join(app.root_path, CFG.MEDIA_FOLDER, CFG.FOLDER_PERSONAS)
+    path_media = os.path.join(app.root_path, cfg.MEDIA_FOLDER)
+    path_database = os.path.join(app.root_path, cfg.DATABASE_FOLDER)
+    database_name = os.path.join(app.root_path, cfg.DATABASE_FOLDER, cfg.DATABASE_NAME)
+    path_video = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_VIDEOS)
+    path_video_detect = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEO_DETECT)
+    path_video_no_detect = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEO_NO_DETECT)
+    path_pictures = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_PICTURES)
+    path_replay = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_REPLAY)
+    path_replay_screens = os.path.join(str(path_replay), str(cfg.FOLDER_REPLAY_SCREENSHOT))
+    path_general = os.path.join(app.root_path, cfg.MEDIA_FOLDER, cfg.FOLDER_PERSONAS)
 
     app.config[constants.FOLDER_MEDIA] = path_media
     app.config[constants.FOLDER_VIDEOS] = path_video
@@ -143,44 +146,44 @@ def create_folder_structure(app):
     app.config[constants.FOLDER_REPLAY] = path_replay
     app.config[constants.FOLDER_REPLAY_SCREENSHOT] = path_replay_screens
     app.config[constants.FOLDER_PERSONAS] = path_general
-    app.config[constants.SQLALCHEMY_DATABASE_URI] = 'sqlite:///' + database_name
+    app.config[constants.SQLALCHEMY_DATABASE_URI] = 'sqlite:///' + str(database_name)
 
     if not os.path.exists(path_media):
         os.makedirs(path_media)
         os.chown(path_media, user_uuid, grp_uuid)
-        app.logger.info('Path media folder created at ' + path_media)
+        app.logger.info('Path media folder created at ' + str(path_media))
     if not os.path.exists(path_database):
         os.makedirs(path_database)
         os.chown(path_database, user_uuid, grp_uuid)
-        app.logger.info('Path datebase folder created at ' + path_database)
+        app.logger.info('Path datebase folder created at ' + str(path_database))
     if not os.path.exists(path_video):
         os.makedirs(path_video)
         os.chown(path_video, user_uuid, grp_uuid)
-        app.logger.info('Path video folder created at ' + path_video)
+        app.logger.info('Path video folder created at ' + str(path_video))
     if not os.path.exists(path_video_detect):
         os.makedirs(path_video_detect)
         os.chown(path_video_detect, user_uuid, grp_uuid)
-        app.logger.info('Path video detect folder created at ' + path_video_detect)
+        app.logger.info('Path video detect folder created at ' + str(path_video_detect))
     if not os.path.exists(path_video_no_detect):
         os.makedirs(path_video_no_detect)
         os.chown(path_video_no_detect, user_uuid, grp_uuid)
-        app.logger.info('Path no_detect folder created at ' + path_video_no_detect)
+        app.logger.info('Path no_detect folder created at ' + str(path_video_no_detect))
     if not os.path.exists(path_pictures):
         os.makedirs(path_pictures)
         os.chown(path_pictures, user_uuid, grp_uuid)
-        app.logger.info('Path picture folder created at ' + path_pictures)
+        app.logger.info('Path picture folder created at ' + str(path_pictures))
     if not os.path.exists(path_replay):
         os.makedirs(path_replay)
         os.chown(path_replay, user_uuid, grp_uuid)
-        app.logger.info('Path replay folder created at ' + path_replay)
+        app.logger.info('Path replay folder created at ' + str(path_replay))
     if not os.path.exists(path_replay_screens):
         os.makedirs(path_replay_screens)
         os.chown(path_replay_screens, user_uuid, grp_uuid)
-        app.logger.info('Path replay_screenshots folder created at ' + path_replay_screens)
+        app.logger.info('Path replay_screenshots folder created at ' + str(path_replay_screens))
     if not os.path.exists(path_general):
         os.makedirs(path_general)
         os.chown(path_general, user_uuid, grp_uuid)
-        app.logger.info('Path general folder created at ' + path_general)
+        app.logger.info('Path general folder created at ' + str(path_general))
 
 def create_app():
     """Construct the core application."""
@@ -192,12 +195,14 @@ def create_app():
     5. Aktualisieren der App Konfiguration mit Konfigurationswerten
     """
     app = Flask(__name__, instance_relative_config=True)
-    get_configuration_data(app=app)
     log_file = os.path.join(app.root_path, 'log/birdshome.log')
     app.logger.addHandler(RotatingFileHandler(filename=log_file, maxBytes=100000, backupCount=10))
+    create_configuration(app)
+    create_database(app)
+    create_application_setup(app)
+    return app
 
-    create_folder_structure(app=app)
-
+def create_database(app) -> Flask:
     db.init_app(app)
     app.app_context().push()
     with app.app_context():
@@ -206,9 +211,14 @@ def create_app():
         engine = db.create_engine(url=app.config[constants.SQLALCHEMY_DATABASE_URI])
         db.metadata.create_all(bind=engine, checkfirst=True)
         app = update_configuration(app)
-
     return app
 
+def create_configuration(_app: Flask) -> None:
+    get_configuration_data(app=_app)
+
+def create_application_setup(_app: Flask) -> None:
+    create_folder_structure(app=_app)
+    update_setup(_app)
 
 def update_configuration(_app):
     from application.handler.database_hndl import DBHandler

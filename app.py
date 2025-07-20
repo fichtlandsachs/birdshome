@@ -18,11 +18,11 @@ from application.forms.admin_form import AdminForm
 from application.handler.database_hndl import DBHandler, DatabaseEventHandler, DatabaseChangeEvent
 from application.handler.video_socket_2 import VideoSocket
 
-try:
-    from uwsgidecorators import *
-    import uwsgi
-except:
-    pass
+#try:
+    #from uwsgidecorators import *
+    #import uwsgi
+#except:
+    #raise
 import cv2
 
 app = create_app()
@@ -119,7 +119,7 @@ def personas():
     num_files_today = len(glob.glob(video_folder + '/*' + str(datetime.datetime.today().day) + str(
         format(datetime.datetime.today().month, '02')) + str(datetime.datetime.today().year) + '*' + app.config[
                                         constants.VID_FORMAT]))
-    if len(list_of_files) > 0 and list_of_files is not None:
+    if len(list_of_files) > 0:
         latest_file = max(list_of_files, key=os.path.getctime)
         latest_file_time = time.strftime(constants.DATETIME_FORMATE_UI, time.localtime(os.stat(latest_file).st_ctime))
     return render_template("personas.html", num_visits_today=num_files_today, last_visit=latest_file_time,
@@ -169,8 +169,7 @@ def slide_show():
     pictures = []
 
     pic_path = app.config[constants.FOLDER_PICTURES]
-    pictures_list = list(
-        sorted(pathlib.Path(pic_path).glob('*' + str(app.config[constants.ENDING_PIC])), key=os.path.getmtime))
+    pictures_list = list(pathlib.Path(str(pic_path)).glob('*' + str(app.config[constants.ENDING_PIC])), key=os.path.getmtime)
     for pic in pictures_list:
         pict = [pic.name, str(pic.relative_to(app.root_path))]
         pictures.append(pict)
@@ -228,7 +227,7 @@ def _take_picture(fileName):
 @app.route('/video_list_raw', methods=['GET', 'POST'])
 def video_list_raw():
     videos = []
-    vid_list = list()
+    vid_list = []
     app.logger.debug('video list page requested')
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -238,11 +237,8 @@ def video_list_raw():
 
     vid_path = app.config[constants.FOLDER_VIDEOS]
 
-    # vid_date = str(sel_datum.day) + str(format(sel_datum.month, '02')) + str(
-    # sel_datum.year)
-
     pattern = '*' + app.config[constants.VID_FORMAT]
-    vid_list.extend(list(sorted(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True)))
+    vid_list.extend(list(pathlib.Path(str(vid_path)).glob(pattern), key=os.path.getmtime, reverse=True))
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -253,7 +249,7 @@ def video_list_raw():
 @app.route('/video_list_detect', methods=['GET', 'POST'])
 def video_list_detect():
     videos = []
-    vid_list = list()
+    vid_list = []
     app.logger.debug('video list page requested')
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -263,10 +259,8 @@ def video_list_detect():
 
     vid_path = app.config[constants.FOLDER_VIDEOS_DETECT]
 
-    # vid_date = str(sel_datum.day) + str(format(sel_datum.month, '02')) + str(
-    #sel_datum.year)
     pattern = '*' + app.config[constants.VID_FORMAT]
-    vid_list.extend(list(sorted(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True)))
+    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True))
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -277,7 +271,7 @@ def video_list_detect():
 @app.route('/replay_list', methods=['GET', 'POST'])
 def replay_list():
     videos = []
-    vid_list = list()
+    vid_list = []
     app.logger.debug('replay page requested')
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -287,7 +281,7 @@ def replay_list():
 
     vid_path = app.config[constants.FOLDER_REPLAY]
     pattern = app.config[constants.VID_FORMAT]
-    vid_list.extend(list(sorted(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True)))
+    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime, reverse=True))
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -299,7 +293,7 @@ def replay_list():
 @app.route('/video_list_no_detect', methods=['GET', 'POST'])
 def video_list_no_detect():
     videos = []
-    vid_list = list()
+    vid_list = []
     vid_path = app.config[constants.FOLDER_VIDEOS_NO_DETECT]
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -307,11 +301,8 @@ def video_list_no_detect():
     else:
         sel_datum = datetime.datetime.today()
 
-    # vid_date = str(sel_datum.day) + str(format(sel_datum.month, '02')) + str(
-    #sel_datum.year)
-
     pattern = '*' + app.config[constants.VID_FORMAT]
-    vid_list.extend(list(sorted(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime)))
+    vid_list.extend(list(pathlib.Path(vid_path).glob(pattern), key=os.path.getmtime))
 
     for media in vid_list:
         vid = [media.name, str(media.relative_to(app.root_path))]
@@ -331,7 +322,7 @@ def _clean_folder(folder, pattern):
 
 
 @app.teardown_appcontext
-def close_connection(exception=None):
+def close_connection():
     _db = getattr(g, '_database', None)
     if _db is not None:
         _db.close()
@@ -540,7 +531,7 @@ def admin():
 
 
 def clear_path_screen_shots():
-    screen_shots = list()
+    screen_shots = []
     pattern = '*.' + app.config[constants.ENDING_PIC]
     screen_path = app.config[constants.FOLDER_REPLAY_SCREENSHOT]
     screen_shots.extend(list(sorted(pathlib.Path(screen_path).glob(pattern), key=os.path.getmtime,

@@ -21,9 +21,7 @@ class BirdVideoAnalyzer:
 
     def __init__(self, _db_uri, model_path="yolov8n.pt", frame_interval=30, resize_factor=0.5):
         """
-        :param input_dir: Pfad zum Verzeichnis, das die zu analysierenden Videos enthält.
-        :param output_dir: Pfad zum Zielverzeichnis für Videos, in denen keine Vögel erkannt wurden.
-        :param output_dir_detect: der Pfad zum Zielverzeichnis für Videos, in denen Vögel erkannt wurden.
+
         :param model_path: der Pfad oder Name des vortrainierten YOLO‑Modells (Standard: YOLOv8n).
         :param frame_interval: Analysiert wird jeweils jeder n‑te Frame, um Rechenzeit zu sparen.
         :param resize_factor: Skalierungsfaktor, um die Frames vor der Analyse zu verkleinern.
