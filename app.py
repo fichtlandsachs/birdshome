@@ -555,4 +555,4 @@ def clear_path_screen_shots():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port='5000', debug=False, use_reloader=False, ssl_context=("/home/pi/localhost.crt", "/home/pi/localhost.key"))
+    app.run(host='0.0.0.0', port='5000', debug=False, use_reloader=False)
