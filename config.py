@@ -1,118 +1,121 @@
+import logging
 import os
 import socket
 
 
 class Config:
     """Base config vars."""
-    DEBUG = False
-    TESTING = False
-    SECRET_KEY = ''
-    USER_APP = 'pi'
-    USER_GROUP = 'pi'
+    DEBUG:bool = False
+    TESTING:bool = False
+    SECRET_KEY:str = ''
+    USER_APP:str = 'pi'
+    USER_GROUP:str = 'pi'
     """"Default configuration Server Upload"""
-    SERVER_UPLOAD_ENABLED = 0
-    DELETE_AFTER_UPLOAD_ENABLED = 0
-    DELETE_NO_DETECT_ENABLED = 0
-    KEEP_FILE_LOCAL = 5
-    PAUSE_RETRY_UPLOAD = 5
-    NUM_RETRY_UPLOAD = 3
-    GRAYSCALE_ENABLED = 0
+    SERVER_UPLOAD_ENABLED:bool = False
+    DELETE_AFTER_UPLOAD_ENABLED:bool = False
+    DELETE_NO_DETECT_ENABLED:bool = False
+    KEEP_FILE_LOCAL:int = 5
+    PAUSE_RETRY_UPLOAD:int = 5
+    NUM_RETRY_UPLOAD:int = 3
+    GRAYSCALE_ENABLED:bool = False
     # Server Upload parameters
-    FTP_ENABLED = 0
-    FTP_SERVER = ''
-    FTP_SHARE = ''
-    FTP_USER = ''
-    FTP_PORT = 00
-    FTP_PASSWORD = ''
+    FTP_ENABLED:bool = False
+    FTP_SERVER:str = ''
+    FTP_SHARE:str = ''
+    FTP_USER:str = ''
+    FTP_PORT:int = 00
+    FTP_PASSWORD:str = ''
 
-    NEXT_CLOUD_ENABLED = 0
-    NEXT_CLOUD_SERVER = ''
-    NEXT_CLOUD_USER = ''
-    NEXT_CLOUD_PASSWORD = ''
-    NEXT_CLOUD_FOLDER = ''
+    NEXT_CLOUD_ENABLED:bool = False
+    NEXT_CLOUD_SERVER:str = ''
+    NEXT_CLOUD_USER:str = ''
+    NEXT_CLOUD_PASSWORD:str = ''
+    NEXT_CLOUD_FOLDER:str = ''
 
-    SMB_ENABLED = 0
-    SMB_SERVER = ''
-    SMB_USER = ''
-    SMB_PASSWORD = ''
-    SMB_SHARE = ''
+    SMB_ENABLED:bool = False
+    SMB_SERVER:str = ''
+    SMB_USER:str = ''
+    SMB_PASSWORD:str = ''
+    SMB_SHARE:str = ''
 
-    FILE_SHARE_ENABLED = 0
-    FILE_SHARE_SERVER = ''
-    FILE_SHARE_USER = ''
-    FILE_SHARE_PASSWORD = ''
-    FILE_SHARE_FOLDER = ''
+    FILE_SHARE_ENABLED:bool = False
+    FILE_SHARE_SERVER:str = ''
+    FILE_SHARE_USER:str = ''
+    FILE_SHARE_PASSWORD:str = ''
+    FILE_SHARE_FOLDER:str = ''
 
     TIME_UPLOAD = '21:00'
     """"Default configuration Video"""
-    DURATION_VID = 15
-    PREFIX_VID = socket.gethostname() + '_'
-    VID_RES_X = 640
-    VID_RES_Y = 480
-    VID_FRAMES = 30
-    VID_FORMAT = '.mp4'
-    SOUND_FORMAT = '.wav'
+    DURATION_VID:int = 15
+    PREFIX_VID:str = socket.gethostname() + '_'
+    VID_RES_X:int = 640
+    VID_RES_Y:int = 480
+    VID_FRAMES:int = 30
+    VID_FORMAT:str = '.mp4'
+    SOUND_FORMAT:str = '.wav'
     VID_ENDINGS = ['*.mp4']
-    VID_LABEL_FORMAT = '%d.%m.%Y %H:%M:%S'
+    VID_LABEL_FORMAT:str = '%d.%m.%Y %H:%M:%S'
 
     """Default replay Configuration"""
-    REPLAY_ENABLED = False
-    FRAMES_PER_SEC_REPLAY = 30
-    REPLAY_INTERVAL = 10
-    REPLAY_DAYS = 7
-    REPLAY_PREFIX_VID = socket.gethostname() + '_'
-    FOLDER_REPLAY = 'replay'
-    FOLDER_REPLAY_SCREENSHOT = 'screenshots'
+    REPLAY_ENABLED:bool = False
+    FRAMES_PER_SEC_REPLAY:int = 30
+    REPLAY_INTERVAL:int = 10
+    REPLAY_DAYS:int = 7
+    REPLAY_PREFIX_VID:str = socket.gethostname() + '_'
+    FOLDER_REPLAY:str = 'replay'
+    FOLDER_REPLAY_SCREENSHOT:str = 'screenshots'
     """Default picture Configuration"""
     PREFIX_PIC = socket.gethostname() + '_'
     ENDING_PIC = 'jpg'
-    LATEST_PIC_RES_X = '1280'
-    LATEST_PIC_RES_Y = '720'
+    LATEST_PIC_RES_X:str = '1280'
+    LATEST_PIC_RES_Y:str = '720'
 
     VID_ANALYSER_TIME_RUN = '02:00'
-    VID_ANALYSER_ENABLED = 0
-    VID_ANALYSER_FRAME_DISTANCE = 30
+    VID_ANALYSER_ENABLED:bool = False
+    VID_ANALYSER_FRAME_DISTANCE:int = 30
 
-    NAME_BIRD = ''
+    NAME_BIRD:str = ''
     DATE_CHICK = None
     DATE_EGG = None
     FIRST_VISIT = None
     DATE_LEAVE = None
 
-    SENSITIVITY = 8
-    KEY = ''
+    SENSITIVITY:int = 10
+    KEY:str = ''
 
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = '/database/birdshome.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS:bool = False
+    #SQLALCHEMY_DATABASE_URI = '/database/birdshome.db'
 
-    OUTPUT_FOLDER = os.path.join('static')
-    FOLDER_MEDIA = 'static/media'
-    DATABASE_FOLDER = 'database'
-    DATABASE_NAME = 'birdshome.db'
-    FOLDER_PICTURES = 'photos'
-    FOLDER_VIDEOS = 'videos'
-    FOLDER_SCREENSHOTS = 'pictures'
-    FOLDER_VIDEOS_NO_DETECT = 'nodetect'
-    FOLDER_VIDEOS_DETECT = 'detect'
-    FOLDER_PERSONAS = 'general'
+    OUTPUT_FOLDER:str = os.path.join('static')
+    FOLDER_MEDIA:str = 'static/media'
+    DATABASE_FOLDER:str = 'database'
+    DATABASE_NAME:str = 'birdshome.db'
+    FOLDER_PICTURES:str = 'photos'
+    FOLDER_VIDEOS:str = 'videos'
+    FOLDER_VIDEOS_NO_DETECT:str = 'nodetect'
+    FOLDER_VIDEOS_DETECT:str = 'detect'
+    FOLDER_PERSONAS:str = 'general'
+    LOG_LOCATION:str = '/var/log/birdshome'
+    LOG_FORMAT:str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    LOG_LEVEL:int = logging.ERROR
 
-    TIME_FORMAT_FILE = "%d%m%Y%H%M%S"
-    TEMPLATES_AUTO_RELOAD = True
+    TIME_FORMAT_FILE:str = "%d%m%Y%H%M%S"
+    TEMPLATES_AUTO_RELOAD:bool = True
 
 
 class ProdConfig(Config):
-    DEBUG = False
-    TESTING = False
-    FLASK_DEBUG = 0
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:////etc/birdshome/application/database/birdshome.db'
+    DEBUG:bool = False
+    TESTING:bool = False
+    FLASK_DEBUG:bool = False
+    SQLALCHEMY_TRACK_MODIFICATIONS:bool = False
+    SQLALCHEMY_DATABASE_URI:str = 'sqlite:////etc/birdshome/application/database/birdshome.db'
 
 class TestConfig(Config):
-    DEBUG = False
-    TESTING = False
-    FLASK_DEBUG = 1
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    DEBUG:bool = True
+    TESTING:bool = True
+    FLASK_DEBUG:bool = False
+    SQLALCHEMY_TRACK_MODIFICATIONS:bool = True
+    SQLALCHEMY_DATABASE_URI:str = 'sqlite:////etc/birdshome/application/database/birdshome_test.db'
 
 
 class DevConfig(Config):

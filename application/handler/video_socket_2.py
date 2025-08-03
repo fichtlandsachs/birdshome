@@ -14,6 +14,7 @@ from picamera2.encoders import H264Encoder, MJPEGEncoder
 from picamera2.outputs import FileOutput, FfmpegOutput
 
 import constants
+from application.handler.birdshome_logger import BirdshomeLogger
 from application.handler.database_hndl import DBHandler, DatabaseChangeEvent
 
 
@@ -28,24 +29,24 @@ class StreamingOutput(io.BufferedIOBase):
             self.condition.notify_all()
 
 
+
+
 class VideoSocket:
-    def __init__(self, db_uri, session):
-        self.video_format = None
-        self.db_uri = db_uri
-        self.logger = logging.getLogger('VideoSocket')
-        self.logger.setLevel(logging.DEBUG)
-        log_file = '/etc/birdshome/application/log/VideoSocket.log'
-        logger_handler = RotatingFileHandler(filename=log_file, maxBytes=100000, backupCount=10)
-        logger_handler.setLevel(logging.DEBUG)
-        # Format für die Log-Meldungen definieren
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        logger_handler.setFormatter(formatter)
-        # Handler dem Logger hinzufügen
-        self.logger.addHandler(logger_handler)
+    def __init__(self, session, log_location:str, log_format:str, log_level:int):
+        self.video_format:str = ''
+        self.logger = BirdshomeLogger(name=__name__, level=log_level, location=log_location, logformat=log_format)
         self.lsize = (640, 480)
-        self.db_handler = DBHandler(self.db_uri, session)
-        self.grayscale_enabled = 0
-        self.cam_available = False
+        self.db_handler = DBHandler(curr_session=session)
+        self.grayscale_enabled:bool = False
+        self.cam_available:bool = False
+        self.output_stream = StreamingOutput()
+        self.streaming_encoder = MJPEGEncoder()
+        self.video_encoder = H264Encoder(framerate=30, iperiod=30, bitrate=10000000)
+        self.video_duration:int = 0
+        self.time_format:str = ''
+        self.output_folder:str = ''
+        self.sensitivity:int = 10
+        self.duration:int = 15
         try:
             self.picam2 = Picamera2()
             config = self.picam2.create_preview_configuration(
@@ -59,14 +60,7 @@ class VideoSocket:
         except Exception as e:
             self.logger.error(e)
             self.cam_available = False
-        self.output_stream = StreamingOutput()
-        self.streaming_encoder = MJPEGEncoder()
-        self.video_encoder = H264Encoder(framerate=30, iperiod=30, bitrate=10000000)
-        self.video_duration = None
-        self.time_format = None
-        self.output_folder = None
-        self.sensitivity = 10
-        self.duration = 15
+
         self.get_configuration()
 
     def handle_database_event(self, event: DatabaseChangeEvent):
@@ -144,6 +138,7 @@ class VideoSocket:
                         self.logger.info(f"start video recording due of movement")
                         self.create_video(full_file_name)
                         ltime = time.time()
+                        cur = self.picam2.capture_buffer("lores")
                     else:
                         if encoding and time.time() - ltime > 2.0:
                             self.picam2.stop_encoder()

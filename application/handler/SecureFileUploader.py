@@ -1,8 +1,10 @@
+import ipaddress
 import logging
 import os
 import socket
 import threading
 from datetime import datetime, timedelta
+from ipaddress import ip_address
 from logging.handlers import RotatingFileHandler
 from time import sleep
 
@@ -12,75 +14,69 @@ from cryptography.fernet import Fernet
 from smb.SMBConnection import SMBConnection
 
 import constants
+from application import BirdshomeLogger
 from application.handler.database_hndl import DBHandler, DatabaseChangeEvent
 
 
 class SecureFileUploader:
-    def __init__(self, db_uri,session, retries=3, delay=5, log_level=logging.ERROR):
+    def __init__(self, session, log_location:str, log_format:str, log_level:int, retries=3, delay=5):
         """
         Initialisiert den Uploader mit der Anzahl der Wiederholungsversuche und der Wartezeit (in Sekunden)
         """
-        self.logger = logging.getLogger('SecureFileUploaderLogger')
-        self.logger.setLevel(log_level)
-        log_file = '/etc/birdshome/application/log/SecureFileUploader.log'
-        logger_handler = RotatingFileHandler(filename=log_file, maxBytes=100000, backupCount=10)
-        logger_handler.setLevel(log_level)
-        # Format für die Log-Meldungen definieren
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        logger_handler.setFormatter(formatter)
-        # Handler dem Logger hinzufügen
-        self.logger.addHandler(logger_handler)
+        self.logger = BirdshomeLogger(name=__name__, location=log_location,level=log_level,logformat=log_format)
         self._retries = retries
         self._delay = delay
-        self._db_handler = DBHandler(db_uri, session)
+        self._db_handler = DBHandler( session)
 
-        self._server_not_found = False
-        self._server_upload_enabled = 0
-        self._ftp_enabled = 0
-        self._smb_enabled = 0
-        self._nextcloud_enabled = 0
-        self._key = ''
-        self._delete_after_upload = 0
-        self._video_folder = ''
-        self._server = ''
-        self._share = ''
-        self._user_upload = ''
-        self._user_password = ''
+        self._server_not_found:bool = False
+        self._server_upload_enabled:bool = False
+        self._ftp_enabled:bool = False
+        self._smb_enabled:bool = False
+        self._nextcloud_enabled:bool = False
+        self._key:str = ''
+        self._delete_after_upload:bool = False
+        self._video_folder:str = ''
+        self._server:str = ''
+        self._share:str = ''
+        self._user_upload:str = ''
+        self._user_password:str = ''
         self._keep_file_time = 0
         self._upload = False
-        self.ip_adress = '0.0.0.0'
-        self.server_not_found = False
+        self._ip_address:ipaddress = ip_address('0.0.0.0')
+        self.server_not_found:bool = False
         self._update_config()
 
     def handle_database_event(self, event: DatabaseChangeEvent):
+        self.logger.debug(f'received Database changed Event in {__name__}')
         self._update_config()
 
     def _update_config(self):
+        self.logger.debug(f'Update runtime configuration in {__name__} from database')
         self._server_upload_enabled = int(
             self._db_handler.get_config_entry(constants.SMB, constants.SERVER_UPLOAD_ENABLED))
-        self._smb_enabled = int(self._db_handler.get_config_entry(constants.SMB, constants.SMB_ENABLED))
+        self._smb_enabled = bool(self._db_handler.get_config_entry(constants.SMB, constants.SMB_ENABLED))
         self._next_cloud_enabled = int(
             self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_ENABLED))
         self._ftp_enabled = int(self._db_handler.get_config_entry(constants.FTP, constants.FTP_ENABLED))
-        if self._server_upload_enabled == 1:
-            if self._ftp_enabled == 1:
-                self._smb_enabled = 0
-                self._nextcloud_enabled = 0
+        if self._server_upload_enabled:
+            if self._ftp_enabled:
+                self._smb_enabled = False
+                self._nextcloud_enabled = False
                 self._server = self._db_handler.get_config_entry(constants.FTP, constants.FTP_SERVER)
                 self._user_upload = self._db_handler.get_config_entry(constants.FTP, constants.FTP_USER)
                 self._user_password = self._db_handler.get_config_entry(constants.FTP, constants.FTP_PASSWORD)
                 self._port = int(self._db_handler.get_config_entry(constants.FTP, constants.FTP_PORT))
                 self._share = self._db_handler.get_config_entry(constants.FTP, constants.FTP_SHARE)
-            if self._smb_enabled == 1:
-                self._ftp_enabled = 0
-                self._nextcloud_enabled = 0
+            if self._smb_enabled:
+                self._ftp_enabled = False
+                self._nextcloud_enabled = False
                 self._server = self._db_handler.get_config_entry(constants.SMB, constants.SMB_SERVER)
                 self._user_upload = self._db_handler.get_config_entry(constants.SMB, constants.SMB_USER)
                 self._user_password = self._db_handler.get_config_entry(constants.SMB, constants.SMB_PASSWORD)
                 self._share = self._db_handler.get_config_entry(constants.SMB, constants.SMB_SHARE)
             if self._next_cloud_enabled == 1:
-                self._ftp_enabled = 0
-                self._smb_enabled = 0
+                self._ftp_enabled = False
+                self._smb_enabled = False
                 self._server = self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_SERVER)
                 self._user_upload = self._db_handler.get_config_entry(constants.NEXT_CLOUD, constants.NEXT_CLOUD_USER)
                 self._user_password = self._db_handler.get_config_entry(constants.NEXT_CLOUD,
@@ -93,7 +89,7 @@ class SecureFileUploader:
         self._delete_after_upload = self._db_handler.get_config_entry(constants.SMB,
                                                                       constants.DELETE_AFTER_UPLOAD_ENABLED)
         if self._delete_after_upload is None:
-            self._delete_after_upload = 0
+            self._delete_after_upload = False
         else:
             self._delete_after_upload = int(self._delete_after_upload)
         self._video_format = self._db_handler.get_config_entry(constants.VIDEO, constants.VID_FORMAT)
@@ -104,20 +100,20 @@ class SecureFileUploader:
     def upload(self):
         while True:
             self._upload = False
-            if int(self._server_upload_enabled) == 1:
+            if self._server_upload_enabled:
                 time_upload = self._time_upload.split(':')
                 time_now = datetime.now().time()
 
                 if time_now.hour >= int(time_upload[0]) or time_now.hour < 3:
                     self.logger.info('Start uploading files')
                     self.upload_folder(self._picture_folder)
-                    self.upload_folder(str(self._video_folder))
+                    self.upload_folder(self._video_folder)
                     self.upload_folder(self._replay_folder)
             sleep(self._delay * 60)
 
     def upload_folder(self, path):
         delete_local = False
-        if self._delete_after_upload == 1:
+        if self._delete_after_upload:
             delete_local = True
         paths = str(path).split('/')
         folder_upload = paths[len(paths) - 1]
@@ -130,7 +126,7 @@ class SecureFileUploader:
     def upload_files(self, folder_local: str, folder_remote: str, delete_local=False):
         if self._key == '':
             self.logger.info('Cancel uploading files due to missing key')
-        if self._smb_enabled == 1:
+        if self._smb_enabled:
             self.logger.info("Using smb for upload")
             smb_passw = Fernet(self._key).decrypt(self._user_password).decode()
             self.upload_samba(retries=self._retries, delay=self._delay, server_name=self._server,
@@ -140,7 +136,7 @@ class SecureFileUploader:
                               folder=folder_remote,
                               local_files=folder_local,
                               delete_local=delete_local)
-        elif self._next_cloud_enabled == 1:
+        elif self._next_cloud_enabled:
             self.logger.info("Using nextcloud for upload")
             nextcloud_passw = Fernet(self._key).decrypt(self._user_password).decode()
             self.upload_nextcloud(retries=self._retries, delay=self._delay, base_url=self._server,
@@ -148,7 +144,7 @@ class SecureFileUploader:
                                   password=nextcloud_passw,
                                   remote_path=os.path.join(self._share, folder_remote),
                                   local_files=folder_local)
-        elif self._ftp_enabled == 1:
+        elif self._ftp_enabled:
             self.logger.info("Using ftp for upload")
             sftp_password = Fernet(self._key).decrypt(self._user_password).decode()
             self.upload_directory_sftp(  host=self._server, port=self._port,
@@ -159,9 +155,9 @@ class SecureFileUploader:
     def check_network(self):
         try:
             if self._server != '':
-                self.ip_adress = socket.gethostbyname(self._server)
+                self._ip_address = socket.gethostbyname(self._server)
                 self.server_not_found = False
-                return self.ip_adress
+                return self._ip_address
             else:
                 self.server_not_found = True
                 self.logger.error(f'Server not defined. Configuration Error')

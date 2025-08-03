@@ -9,11 +9,12 @@ import cv2
 
 import application as appl
 import constants as constants
+from application import BirdshomeLogger
 from application.handler.database_hndl import DBHandler, DatabaseChangeEvent
 
 
 class ScreenShotHandler:
-    def __init__(self, db_uri, session):
+    def __init__(self, session, log_location:str, log_format:str, log_level:int):
 
         self._last_run_screen_shot = None
         self._folder_screen_shots = None
@@ -25,8 +26,8 @@ class ScreenShotHandler:
         self._lastrun = None
         self._daysReplay = None
         self._last_run_replay = None
-        self._db_path = db_uri
-        self._dbHandler = DBHandler(db_uri, session)
+        self._dbHandler = DBHandler(session)
+        self._logger = BirdshomeLogger(name='ScreenShotHandler', location=log_location,logformat=log_format,level=log_level)
         self._update_config()
 
     def _update_config(self):
@@ -59,6 +60,7 @@ class ScreenShotHandler:
         client_socket.close()
 
     def create_replay(self):
+        self._logger.info('start creating replay')
         screen_shots = []
         pattern = '*.' + self._ending_picture
         screen_shots.extend(list(sorted(pathlib.Path(self._folder_screen_shots).glob(pattern), key=os.path.getmtime,
@@ -76,7 +78,8 @@ class ScreenShotHandler:
             for screen in screen_shots:
                 os.remove(screen)
         except subprocess.CalledProcessError as e:
-            print("Fehler beim Erstellen des Videos:", e)
+            self._logger.error(f"Error creating replay {full_file_name}:", e)
+        self._logger.info(f'created replay {full_file_name}')
 
     def start_replay_server(self):
         threading.Thread(target=self.start_replay, daemon=True).start()
@@ -89,11 +92,13 @@ class ScreenShotHandler:
                     self._dbHandler.create_update_config_entry(constants.REPLAY, constants.REPLAY_LAST_STARTTIME,
                                                                datetime.datetime.now().strftime(
                                                                    constants.DATETIME_FORMAT))
+                    self._logger.debug('set initial timestamp for last Replay created in Database')
                 if self._last_run_screen_shot is None:
                     self._create_screen_shot()
                     self._last_run_screen_shot = datetime.datetime.now().strftime(constants.DATETIME_FORMAT)
                     self._dbHandler.create_update_config_entry(constants.REPLAY, constants.REPLAY_LAST_RUN_SCREEN,
                                                                self._last_run_screen_shot)
+                    self._logger.debug('set initial timestamp for last Screenshot create in Database')
 
                 else:
                     self._lastrun = datetime.datetime.strptime(self._last_run_screen_shot, '%d.%m.%Y %H:%M:%S')
@@ -123,4 +128,5 @@ class ScreenShotHandler:
                 sleep(self._intervall * 60)
 
     def handle_database_event(self, event: DatabaseChangeEvent):
+        self._logger.debug(f'load new Database config, DatabaseChanged event received in {__name__}')
         self._update_config()

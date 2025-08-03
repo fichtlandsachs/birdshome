@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 from application.models import Appconfig
 
@@ -31,12 +31,9 @@ class DatabaseEventHandler:
 
 
 class DBHandler:
-    def __init__(self, db_url, curr_session):
+    def __init__(self, curr_session: Session):
         if curr_session is None:
-            engine = create_engine(db_url)
-            self.conn = engine.connect()
-            session = sessionmaker(bind=engine)
-            self.session = session()
+            raise BaseException()
         else:
             self.session = curr_session
             self.conn = None

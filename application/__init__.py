@@ -1,6 +1,9 @@
+import logging
 import os
 import socket
 import struct
+import sys
+from datetime import datetime
 from grp import getgrnam
 from logging.handlers import RotatingFileHandler
 from pwd import getpwnam
@@ -13,6 +16,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 
 import constants
+from application.handler.birdshome_logger import BirdshomeLogger
 from config import Config as cfg, DevConfig, ProdConfig, TestConfig
 
 
@@ -45,72 +49,75 @@ class SocketReader:
 
 db = SQLAlchemy()
 appConfigKeys = [
-    [constants.PICTURE, constants.ENDING_PIC],
-    [constants.PICTURE, constants.PREFIX_PIC],
-    [constants.PICTURE, constants.LATEST_PIC_RES_X],
-    [constants.PICTURE, constants.LATEST_PIC_RES_Y],
+    [constants.PICTURE, constants.ENDING_PIC, str],
+    [constants.PICTURE, constants.PREFIX_PIC, str],
+    [constants.PICTURE, constants.LATEST_PIC_RES_X, str],
+    [constants.PICTURE, constants.LATEST_PIC_RES_Y, str],
 
-    [constants.VIDEO, constants.DURATION_VID],
-    [constants.VIDEO, constants.PREFIX_VID],
-    [constants.VIDEO, constants.VID_RES_X],
-    [constants.VIDEO, constants.VID_RES_Y],
-    [constants.VIDEO, constants.VID_FRAMES],
-    [constants.VIDEO, constants.VID_LABEL_FORMAT],
-    [constants.VIDEO, constants.VID_FORMAT],
-    [constants.VIDEO, constants.TIME_FORMAT_FILE],
-    [constants.VIDEO, constants.FOLDER_VIDEOS],
-    [constants.VIDEO, constants.FOLDER_VIDEOS_NO_DETECT],
-    [constants.VIDEO, constants.FOLDER_VIDEOS_DETECT],
+    [constants.VIDEO, constants.DURATION_VID, int],
+    [constants.VIDEO, constants.PREFIX_VID, str],
+    [constants.VIDEO, constants.VID_RES_X, str],
+    [constants.VIDEO, constants.VID_RES_Y, str],
+    [constants.VIDEO, constants.VID_FRAMES, int],
+    [constants.VIDEO, constants.VID_LABEL_FORMAT, str],
+    [constants.VIDEO, constants.VID_FORMAT, str],
+    [constants.VIDEO, constants.TIME_FORMAT_FILE, str],
+    [constants.VIDEO, constants.FOLDER_VIDEOS, str],
+    [constants.VIDEO, constants.FOLDER_VIDEOS_NO_DETECT, str],
+    [constants.VIDEO, constants.FOLDER_VIDEOS_DETECT, str],
 
-    [constants.REPLAY, constants.REPLAY_PREFIX_VID],
-    [constants.REPLAY, constants.FRAMES_PER_SEC_REPLAY],
-    [constants.REPLAY, constants.REPLAY_INTERVAL],
-    [constants.REPLAY, constants.REPLAY_DAYS],
-    [constants.REPLAY, constants.REPLAY_ENABLED],
-    [constants.REPLAY, constants.FOLDER_REPLAY_SCREENSHOT],
-    [constants.REPLAY, constants.FOLDER_REPLAY],
+    [constants.REPLAY, constants.REPLAY_PREFIX_VID, str],
+    [constants.REPLAY, constants.FRAMES_PER_SEC_REPLAY, int],
+    [constants.REPLAY, constants.REPLAY_INTERVAL, int],
+    [constants.REPLAY, constants.REPLAY_DAYS, int],
+    [constants.REPLAY, constants.REPLAY_ENABLED, bool],
+    [constants.REPLAY, constants.FOLDER_REPLAY_SCREENSHOT, str],
+    [constants.REPLAY, constants.FOLDER_REPLAY, str],
 
-    [constants.VID_ANALYSER, constants.VID_ANALYSER_TIME_RUN],
-    [constants.VID_ANALYSER, constants.VID_ANALYSER_FRAME_DISTANCE],
-    [constants.VID_ANALYSER, constants.VID_ANALYSER_ENABLED],
-    [constants.VID_ANALYSER, constants.DELETE_NO_DETECT_ENABLED],
-    [constants.SMB, constants.SERVER_UPLOAD_ENABLED],
-    [constants.SMB, constants.DELETE_AFTER_UPLOAD_ENABLED],
+    [constants.VID_ANALYSER, constants.VID_ANALYSER_TIME_RUN, str],
+    [constants.VID_ANALYSER, constants.VID_ANALYSER_FRAME_DISTANCE, int],
+    [constants.VID_ANALYSER, constants.VID_ANALYSER_ENABLED, bool],
+    [constants.VID_ANALYSER, constants.DELETE_NO_DETECT_ENABLED, bool],
+    [constants.SMB, constants.SERVER_UPLOAD_ENABLED, bool],
+    [constants.SMB, constants.DELETE_AFTER_UPLOAD_ENABLED, bool],
 
-    [constants.SMB, constants.KEEP_FILE_LOCAL],
-    [constants.SMB, constants.TIME_UPLOAD],
+    [constants.SMB, constants.KEEP_FILE_LOCAL, str],
+    [constants.SMB, constants.TIME_UPLOAD, str],
 
-    [constants.SMB, constants.SMB_ENABLED],
-    [constants.SMB, constants.SMB_SERVER],
-    [constants.SMB, constants.SMB_USER],
-    [constants.SMB, constants.SMB_PASSWORD],
-    [constants.SMB, constants.SMB_SHARE],
+    [constants.SMB, constants.SMB_ENABLED, bool],
+    [constants.SMB, constants.SMB_SERVER, str],
+    [constants.SMB, constants.SMB_USER, str],
+    [constants.SMB, constants.SMB_PASSWORD, str],
+    [constants.SMB, constants.SMB_SHARE, str],
 
-    [constants.FTP, constants.FTP_ENABLED],
-    [constants.FTP, constants.FTP_SERVER],
-    [constants.FTP, constants.FTP_USER],
-    [constants.FTP, constants.FTP_PASSWORD],
-    [constants.FTP, constants.FTP_PORT],
-    [constants.FTP, constants.FTP_SHARE],
+    [constants.FTP, constants.FTP_ENABLED, bool],
+    [constants.FTP, constants.FTP_SERVER, str],
+    [constants.FTP, constants.FTP_USER, str],
+    [constants.FTP, constants.FTP_PASSWORD, str],
+    [constants.FTP, constants.FTP_PORT, int],
+    [constants.FTP, constants.FTP_SHARE, str],
 
-    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_ENABLED],
-    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_SERVER],
-    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_USER],
-    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_PASSWORD],
-    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_FOLDER],
+    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_ENABLED, bool],
+    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_SERVER, str],
+    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_USER, str],
+    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_PASSWORD, str],
+    [constants.NEXT_CLOUD, constants.NEXT_CLOUD_FOLDER, str],
 
-    [constants.SYSTEM, constants.TIME_FORMAT_FILE],
-    [constants.SYSTEM, constants.SENSITIVITY],
-    [constants.SYSTEM, constants.GRAYSCALE_ENABLED],
-    [constants.SYSTEM, constants.FOLDER_MEDIA],
-    [constants.SYSTEM, constants.FOLDER_PICTURES],
-    [constants.SYSTEM, constants.FOLDER_PERSONAS],
+    [constants.SYSTEM, constants.TIME_FORMAT_FILE, str],
+    [constants.SYSTEM, constants.SENSITIVITY, int],
+    [constants.SYSTEM, constants.GRAYSCALE_ENABLED, bool],
+    [constants.SYSTEM, constants.FOLDER_MEDIA, str],
+    [constants.SYSTEM, constants.FOLDER_PICTURES, str],
+    [constants.SYSTEM, constants.FOLDER_PERSONAS, str],
+    [constants.SYSTEM, constants.LOG_LEVEL, int],
+    [constants.SYSTEM, constants.LOG_LOCATION, str],
+    [constants.SYSTEM, constants.LOG_FORMAT, str],
 
-    [constants.NEST_CONFIG, constants.FIRST_VISIT],
-    [constants.NEST_CONFIG, constants.DATE_EGG],
-    [constants.NEST_CONFIG, constants.DATE_CHICK],
-    [constants.NEST_CONFIG, constants.DATE_LEAVE],
-    [constants.NEST_CONFIG, constants.NAME_BIRD]
+    [constants.NEST_CONFIG, constants.FIRST_VISIT, datetime],
+    [constants.NEST_CONFIG, constants.DATE_EGG, datetime],
+    [constants.NEST_CONFIG, constants.DATE_CHICK, datetime],
+    [constants.NEST_CONFIG, constants.DATE_LEAVE, datetime],
+    [constants.NEST_CONFIG, constants.NAME_BIRD, str]
 ]
 
 
@@ -130,7 +137,6 @@ def create_folder_structure(app):
 
     path_media = os.path.join(app.root_path, cfg.FOLDER_MEDIA)
     path_database = os.path.join(app.root_path, cfg.DATABASE_FOLDER)
-    database_name = os.path.join(app.root_path, cfg.DATABASE_FOLDER, cfg.DATABASE_NAME)
     path_video = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_VIDEOS)
     path_video_detect = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEOS_DETECT)
     path_video_no_detect = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_VIDEOS, cfg.FOLDER_VIDEOS_NO_DETECT)
@@ -138,6 +144,7 @@ def create_folder_structure(app):
     path_replay = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_REPLAY)
     path_replay_screens = os.path.join(str(path_replay), str(cfg.FOLDER_REPLAY_SCREENSHOT))
     path_general = os.path.join(app.root_path, cfg.FOLDER_MEDIA, cfg.FOLDER_PERSONAS)
+    path_logging = os.path.join(cfg.LOG_LOCATION)
 
     app.config[constants.FOLDER_MEDIA] = path_media
     app.config[constants.FOLDER_VIDEOS] = path_video
@@ -147,7 +154,7 @@ def create_folder_structure(app):
     app.config[constants.FOLDER_REPLAY] = path_replay
     app.config[constants.FOLDER_REPLAY_SCREENSHOT] = path_replay_screens
     app.config[constants.FOLDER_PERSONAS] = path_general
-    #app.config[constants.SQLALCHEMY_DATABASE_URI] = 'sqlite:///' + str(database_name)
+    app.config[constants.LOG_LOCATION] = path_logging
 
     if not os.path.exists(path_media):
         os.makedirs(path_media)
@@ -185,6 +192,10 @@ def create_folder_structure(app):
         os.makedirs(path_general)
         os.chown(path_general, user_uuid, grp_uuid)
         app.logger.info('Path general folder created at ' + str(path_general))
+    if not os.path.exists(path_logging):
+        os.makedirs(path_logging)
+        os.chown(path_logging, user_uuid, grp_uuid)
+        app.logger.info('Path general folder created at ' + str(path_logging))
 
 def create_app():
     """Construct the core application."""
@@ -196,12 +207,17 @@ def create_app():
     5. Aktualisieren der App Konfiguration mit Konfigurationswerten
     """
     app = Flask(__name__, instance_relative_config=True)
-    log_file = os.path.join(app.root_path, 'log/birdshome.log')
-    app.logger.addHandler(RotatingFileHandler(filename=log_file, maxBytes=100000, backupCount=10))
+
     create_configuration(app)
-    create_database(app)
     create_application_setup(app)
+
+    app.logger = BirdshomeLogger('birdsapp', app.config[constants.LOG_LEVEL], logformat=app.config[constants.LOG_FORMAT],
+                                 location=app.config[constants.LOG_LOCATION])
+    create_database(app)
+    update_setup(app)
+
     return app
+
 
 def create_database(app) -> Flask:
     db.init_app(app)
@@ -214,7 +230,7 @@ def create_database(app) -> Flask:
         Session = sessionmaker(bind=engine)
         session = Session()
         db.session.commit()
-        app.config['DB_SESSION'] = session
+        app.config[constants.DB_SESSION] = session
         app = update_configuration(app)
     return app
 
@@ -223,12 +239,11 @@ def create_configuration(_app: Flask) -> None:
 
 def create_application_setup(_app: Flask) -> None:
     create_folder_structure(app=_app)
-    update_setup(_app)
 
 def update_configuration(_app):
     from application.handler.database_hndl import DBHandler
     update_setup(_app)
-    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI], _app.config[constants.DB_SESSION])
+    _db = DBHandler( _app.config[constants.DB_SESSION])
     for entry in appConfigKeys:
         _app.config[entry[1]] = _db.get_config_entry(entry[0], entry[1])
     return _app
@@ -236,12 +251,21 @@ def update_configuration(_app):
 
 def update_setup(_app):
     from application.handler.database_hndl import DBHandler
-    _db = DBHandler(_app.config[constants.SQLALCHEMY_DATABASE_URI], _app.config[constants.DB_SESSION])
-    for entry in appConfigKeys:
-        if not _db.check_config_entry_exists(entry[0], entry[1]):
-            _db.create_update_config_entry(entry[0], entry[1], _app.config[entry[1]])
-        else:
-            _app.config[entry[1]] = _db.get_config_entry(entry[0], entry[1])
+    _db = DBHandler(_app.config[constants.DB_SESSION])
+    try:
+        for entry in appConfigKeys:
+            if not _db.check_config_entry_exists(entry[0], entry[1]):
+                _db.create_update_config_entry(entry[0], entry[1], _app.config[entry[1]])
+            else:
+                db_entry = _db.get_config_entry(entry[0], entry[1])
+                if entry[2] == bool:
+                    _app.config[entry[1]] = entry[2](int(db_entry))
+                if db_entry is None:
+                    _app.config[entry[1]] = None
+                else:
+                    _app.config[entry[1]] = entry[2](db_entry)
+    except Exception as e:
+        print(e)
 
 
 def recvall(sock, count):
@@ -266,20 +290,21 @@ def video_streaming_frame(client_socket, payload_size):
         frame_data = recvall(client_socket, msg_size)
         if frame_data is None:
             frame_data = None
-
-    # Deserialisiere den Frame (JPEG als numpy-Array per pickle)
-    # frame = pickle.loads(frame_data)
     return frame_data
 
 
 def get_streaming_socket():
+    logger = setup_logger('Streaming_Socket', '/etc/birdshome/application/log/steaming_socket.log', logging.ERROR)
     server_ip = '127.0.0.1'
     server_port = 9999
     # """Video streaming generator function."""
     """Verbindet sich mit dem Server, empfängt Frames und zeigt sie mit OpenCV an."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((server_ip, server_port))
-
+    try:
+        client_socket.connect((server_ip, server_port))
+    except ConnectionError as e:
+        logger.error(e.strerror)
+        return None, None
     payload_size = struct.calcsize(">L")
     return client_socket, payload_size
 
@@ -307,4 +332,33 @@ def get_streaming_frame(client_socket, payload_size):
 
 def create_video():
     client_socket, _ = get_streaming_socket()
-    client_socket.sendall('create_video'.encode('utf-8'))
+    if client_socket is not None:
+        client_socket.sendall('create_video'.encode('utf-8'))
+
+
+def setup_logger(name='my_logger', log_file='app.log', level=logging.INFO):
+    # Logger erzeugen
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.propagate = False  # verhindert doppelte Ausgaben
+
+    # Format definieren
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    # Handler für Datei mit Rotation
+    file_handler = RotatingFileHandler(log_file, maxBytes=5_000_000, backupCount=5)
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(level)
+
+    # Handler für Konsole
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(level)
+
+    # Handler zum Logger hinzufügen
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    return logger

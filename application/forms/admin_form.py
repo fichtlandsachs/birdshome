@@ -51,6 +51,7 @@ class AdminForm(FlaskForm):
     )
     service = RadioField(label='Dienst', choices=[('smb', 'SMB'), ('nextcloud', 'Nextcloud'), ('ftp', 'FTP')],
                          default='smb')
+
     # Eingabefelder für SMB
     smb_share = StringField(label='SMB Share', validators=[DataRequired()])
     smb_host = StringField(label='SMB Host', validators=[DataRequired()])

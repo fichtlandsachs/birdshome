@@ -42,7 +42,10 @@ def get_db():
 
 with app.app_context():
     app.logger.info('Start Video_socket')
-    video_socket = VideoSocket(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    video_socket = VideoSocket(session=app.config[constants.DB_SESSION],
+                               log_location=app.config[constants.LOG_LOCATION],
+                               log_format=app.config[constants.LOG_FORMAT],
+                               log_level=app.config[constants.LOG_LEVEL])
     app.config[constants.EVENT_HANDLERS].register_listener(video_socket)
     thread_video = threading.Thread(target=video_socket.start_socket())
     thread_video.start()
@@ -50,23 +53,32 @@ with app.app_context():
 time.sleep(5)
 with app.app_context():
     app.logger.info('Start ReplayTask')
-    replay_socket = ScreenShotHandler(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    replay_socket = ScreenShotHandler(session=app.config[constants.DB_SESSION],
+                                      log_location=app.config[constants.LOG_LOCATION],
+                                      log_format=app.config[constants.LOG_FORMAT],
+                                      log_level=app.config[constants.LOG_LEVEL])
     app.config[constants.EVENT_HANDLERS].register_listener(replay_socket)
     replay_socket.start_replay_server()
 
 with app.app_context():
     app.logger.info('Start FileUploader')
-    file_socket = SecureFileUploader(db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    file_socket = SecureFileUploader(session=app.config[constants.DB_SESSION],
+                                     log_location=app.config[constants.LOG_LOCATION],
+                                     log_format=app.config[constants.LOG_FORMAT],
+                                     log_level=app.config[constants.LOG_LEVEL])
     app.config[constants.EVENT_HANDLERS].register_listener(file_socket)
     file_socket.start_upload_server()
 
 with app.app_context():
     app.logger.info('Start BirdsAnalyser')
-    bird_analyser_socket = BirdVideoAnalyzer(_db_uri=app.config[constants.SQLALCHEMY_DATABASE_URI], session=app.config[constants.DB_SESSION])
+    bird_analyser_socket = BirdVideoAnalyzer(session=app.config[constants.DB_SESSION],
+                                             log_location=app.config[constants.LOG_LOCATION],
+                                             log_format=app.config[constants.LOG_FORMAT],
+                                             log_level=app.config[constants.LOG_LEVEL])
     app.config[constants.EVENT_HANDLERS].register_listener(bird_analyser_socket)
     bird_analyser_socket.start_analyse_server()
 
-db = DBHandler(app.config[constants.SQLALCHEMY_DATABASE_URI], app.config[constants.DB_SESSION])
+db = DBHandler(app.config[constants.DB_SESSION])
 if db.check_config_entry_exists(constants.SYSTEM, constants.KEY) and db.get_config_entry(constants.SYSTEM,
                                                                                          constants.KEY) != '':
     key = db.get_config_entry(constants.SYSTEM, constants.KEY)
@@ -75,6 +87,7 @@ else:
     db.create_update_config_entry(constants.SYSTEM, constants.KEY, key)
 if app.config['SECRET_KEY'] == '':
     app.config['SECRET_KEY'] = Fernet.generate_key()
+    app.logger.debug('new secret key generated')
     db.create_update_config_entry(constants.SYSTEM, constants.KEY, key)
 cipher = Fernet(key)
 
@@ -82,8 +95,13 @@ cipher = Fernet(key)
 @app.route('/')
 @app.route('/personas', methods=['GET', 'POST'])
 def personas():
-    global first_visit, date_leave, date_chick, name_bird, date_eggs
-    _db = DBHandler(app.config[constants.SQLALCHEMY_DATABASE_URI], app.config[constants.DB_SESSION])
+    first_visit = None
+    date_leave = None
+    date_chick = None
+    name_bird = None
+    date_eggs = None
+
+    _db = DBHandler(app.config[constants.DB_SESSION])
     if request.method == 'GET':
         name_bird = app.config[constants.NAME_BIRD]
         first_visit = app.config[constants.FIRST_VISIT]
@@ -215,19 +233,20 @@ def capture_picture():
 # Aufnehmen eines Fotos
 def _take_picture(fileName):
     client_socket, payload_size = appl.get_streaming_socket()
-    image = appl.get_streaming_frame(client_socket, payload_size)
+    if client_socket is not None:
+        image = appl.get_streaming_frame(client_socket, payload_size)
 
-    if np.array(image).size > 1:
-        _draw_label(image, datetime.datetime.now().strftime(constants.DATETIME_FORMAT), (20, 20))
-        image_gray = image
-        cv2.imwrite(fileName, image_gray)
-        client_socket.close()
+        if np.array(image).size > 1:
+            _draw_label(image, datetime.datetime.now().strftime(constants.DATETIME_FORMAT), (20, 20))
+            image_gray = image
+            cv2.imwrite(fileName, image_gray)
+            client_socket.close()
 
 
 @app.route('/video_list_raw', methods=['GET', 'POST'])
 def video_list_raw():
     videos = []
-    vid_list = []
+
     app.logger.debug('video list page requested')
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -249,7 +268,7 @@ def video_list_raw():
 @app.route('/video_list_detect', methods=['GET', 'POST'])
 def video_list_detect():
     videos = []
-    vid_list = []
+
     app.logger.debug('video list page requested')
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -271,7 +290,7 @@ def video_list_detect():
 @app.route('/replay_list', methods=['GET', 'POST'])
 def replay_list():
     videos = []
-    vid_list = []
+
     app.logger.debug('replay page requested')
     if request.method == 'POST':
         form_datum = request.form.get('dateFiles')
@@ -536,4 +555,4 @@ def clear_path_screen_shots():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port='5000', debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port='5000', debug=False, use_reloader=False, ssl_context=("/home/pi/localhost.crt", "/home/pi/localhost.key"))
