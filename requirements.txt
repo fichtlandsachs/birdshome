@@ -13,7 +13,7 @@ flask_wtf
 wtforms~=3.2.1
 wtforms-html5
 wtforms_components
-#pysmb~=1.2.10
+pysmb~=1.2.10
 #pyzmq
 ultralytics~=8.3.91
 paramiko~=3.5.1
